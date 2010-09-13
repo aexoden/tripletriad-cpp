@@ -1,4 +1,4 @@
-#include "Card.h"
+#include "card.hh"
 
 int Card::nextID = 0;
 

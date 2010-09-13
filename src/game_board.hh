@@ -8,10 +8,10 @@
 #include "SDL.h"
 #include "SDL_gfxPrimitives.h"
 
-#include "Card.h"
-#include "enum.h"
-#include "Move.h"
-#include "Square.h"
+#include "card.hh"
+#include "common.hh"
+#include "move.hh"
+#include "square.hh"
 
 class GameBoard
 {

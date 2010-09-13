@@ -6,7 +6,7 @@
 #include "SDL.h"
 #include "SDL_gfxPrimitives.h"
 
-#include "enum.h"
+#include "common.hh"
 
 class Card
 {

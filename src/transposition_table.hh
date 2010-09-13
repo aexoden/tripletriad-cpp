@@ -1,7 +1,7 @@
 #ifndef TRANSPOSITIONTABLE_H
 #define TRANSPOSITIONTABLE_H
 
-#include "Move.h"
+#include "move.hh"
 
 class TranspositionTable
 {

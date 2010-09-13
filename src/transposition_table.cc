@@ -1,7 +1,7 @@
 #include <limits>
 #include <string.h>
 
-#include "TranspositionTable.h"
+#include "transposition_table.hh"
 
 TranspositionTable::Entry* const TranspositionTable::getEntry(unsigned long long key)
 {

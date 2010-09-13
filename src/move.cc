@@ -1,5 +1,5 @@
-#include "Card.h"
-#include "Move.h"
+#include "card.hh"
+#include "move.hh"
 
 std::ostream& operator<<(std::ostream &stream, const Move &move)
 {

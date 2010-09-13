@@ -2,8 +2,8 @@
 #include <iostream>
 #include <limits>
 
-#include "TripleTriad.h"
-#include "Player.h"
+#include "tripletriad.hh"
+#include "player.hh"
 
 // Define macros for finding the minimum or maximum of two inputs.
 #define MIN(X, Y)  ((X) < (Y) ? (X) : (Y))

@@ -1,12 +1,10 @@
 #include <iostream>
 #include <list>
 
-#include "config.h"
+#include "game_board.hh"
+#include "player.hh"
 
-#include "GameBoard.h"
-#include "Player.h"
-
-#include "TripleTriad.h"
+#include "tripletriad.hh"
 
 TripleTriad::TripleTriad()
 {

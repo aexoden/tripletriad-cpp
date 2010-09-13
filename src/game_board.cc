@@ -1,6 +1,6 @@
 #include <assert.h>
 
-#include "GameBoard.h"
+#include "game_board.hh"
 
 GameBoard::GameBoard(Piece startPiece, std::list<Card*> blueCards, std::list<Card*> redCards, bool isSame, bool isPlus, bool isSameWall, bool isElemental)
 {

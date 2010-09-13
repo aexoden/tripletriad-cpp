@@ -1,6 +1,8 @@
 #ifndef ENUM_H
 #define ENUM_H
 
+#define VERSION "0.2.0_pre0"
+
 // Enumerated constants representing the various possible elements.
 enum Element
 {

@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "enum.h"
+#include "common.hh"
 
 class Square
 {
