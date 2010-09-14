@@ -15,6 +15,7 @@ OBJECTS := \
 	src/game_board.o \
 	src/move.o \
 	src/player.o \
+	src/square.o \
 	src/transposition_table.o \
 	src/tripletriad.o
 

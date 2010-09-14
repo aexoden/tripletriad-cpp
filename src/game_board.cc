@@ -53,17 +53,18 @@ GameBoard::GameBoard(Piece startPiece, std::list<Card*> blueCards, std::list<Car
 	// Initialize the initial game board.
 	for (int i = 0; i < BOARD_SIZE; i++)
 	{
-		this->_gameBoard[i].element = ELEMENT_NONE;
 		if (SQUARE_TO_ROW(i) >= 0 && SQUARE_TO_ROW(i) < 3 && SQUARE_TO_COL(i) >= 0 && SQUARE_TO_COL(i) < 3)
 		{
+			std::shared_ptr<Square> square(new Square(SQUARE_TO_ROW(i), SQUARE_TO_COL(i), ELEMENT_NONE));
+			this->_gameBoard.push_back(square);
 
-			this->_gameBoard[i].owner = PIECE_NONE;
-			this->_gameBoard[i].row = SQUARE_TO_ROW(i);
-			this->_gameBoard[i].col = SQUARE_TO_COL(i);
+			this->_owners.push_back(PIECE_NONE);
 		}
 		else
 		{
-			this->_gameBoard[i].owner = PIECE_INVALID;
+			std::shared_ptr<Square> square(new Square(-1, -1, ELEMENT_NONE));
+			this->_gameBoard.push_back(square);
+			this->_owners.push_back(PIECE_INVALID);
 		}
 	}
 
@@ -79,39 +80,44 @@ void GameBoard::move(Move *move)
 	if (this->isValidMove(move))
 	{
 		// Save the current board state.
-		Square *squareArray = new Square[BOARD_SIZE];
-		memcpy(squareArray, this->_gameBoard, sizeof(Square) * BOARD_SIZE);
-		this->_gameBoardStack.push(squareArray);
+		std::vector<Piece> squareArray(this->_owners);
+		this->_ownersStack.push(squareArray);
 		this->_pieceStack.push(this->_currentPiece);
 		this->_moveStack.push(this->_lastMove);
 		this->_cardStack.push(move->card);
 		this->_zobristStack.push(this->_zobristKey);
 
 		// Add the actual card to the board.
-		this->_gameBoard[ROWCOL_TO_SQUARE(move->row, move->col)].owner = this->_currentPiece;
-		this->_gameBoard[ROWCOL_TO_SQUARE(move->row, move->col)].setCard(move->card);
+		this->_owners[ROWCOL_TO_SQUARE(move->row, move->col)] = this->_currentPiece;
+		this->_gameBoard[ROWCOL_TO_SQUARE(move->row, move->col)]->set_card(move->card);
 		this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(move->row, move->col)][this->_currentPiece][move->card->ID];
 		
 		// Declare a list of squares to check for combos.
-		std::list<Square*> comboSquares;
+		std::list<std::shared_ptr<Square>> comboSquares;
 
 		// Establish some basic variables.
-		Square baseSquare = this->_gameBoard[ROWCOL_TO_SQUARE(move->row, move->col)];
-		Card *baseCard = baseSquare.getCard();
+		std::shared_ptr<Square> baseSquare = this->_gameBoard[ROWCOL_TO_SQUARE(move->row, move->col)];
+		Card *baseCard = baseSquare->get_card();
 		bool flipNorth = false;
 		bool flipSouth = false;
 		bool flipWest = false;
 		bool flipEast = false;
 		
 		// Prepare various variables to make square and card access easier.
-		Square *northSquare = this->_gameBoard + ROWCOL_TO_SQUARE(move->row, move->col) + N;
-		Square *southSquare = this->_gameBoard + ROWCOL_TO_SQUARE(move->row, move->col) + S;
-		Square *westSquare = this->_gameBoard + ROWCOL_TO_SQUARE(move->row, move->col) + W;
-		Square *eastSquare = this->_gameBoard + ROWCOL_TO_SQUARE(move->row, move->col) + E;
-		Card *northCard = northSquare->getCard();
-		Card *southCard = southSquare->getCard();
-		Card *eastCard = eastSquare->getCard();
-		Card *westCard = westSquare->getCard();		
+		std::shared_ptr<Square> northSquare = this->_gameBoard[ROWCOL_TO_SQUARE(move->row, move->col) + N];
+		std::shared_ptr<Square> southSquare = this->_gameBoard[ROWCOL_TO_SQUARE(move->row, move->col) + S];
+		std::shared_ptr<Square> westSquare = this->_gameBoard[ROWCOL_TO_SQUARE(move->row, move->col) + W];
+		std::shared_ptr<Square> eastSquare = this->_gameBoard[ROWCOL_TO_SQUARE(move->row, move->col) + E];
+
+		int northOwner = this->_owners[ROWCOL_TO_SQUARE(move->row, move->col) + N];
+		int southOwner = this->_owners[ROWCOL_TO_SQUARE(move->row, move->col) + S];
+		int westOwner = this->_owners[ROWCOL_TO_SQUARE(move->row, move->col) + W];
+		int eastOwner = this->_owners[ROWCOL_TO_SQUARE(move->row, move->col) + E];
+
+		Card *northCard = northSquare->get_card();
+		Card *southCard = southSquare->get_card();
+		Card *eastCard = eastSquare->get_card();
+		Card *westCard = westSquare->get_card();		
 		
 		// Execute the same rule, if enabled.
 		if (this->_isSame)
@@ -256,9 +262,9 @@ void GameBoard::move(Move *move)
 		// Check each of the four cards to see if it can be flipped.
 		if (flipNorth == true)
 		{
-			if (northSquare->owner == this->getOppositePiece(this->_currentPiece))
+			if (northOwner == this->getOppositePiece(this->_currentPiece))
 			{
-				northSquare->owner = this->_currentPiece;
+				this->_owners[ROWCOL_TO_SQUARE(move->row, move->col) + N] = this->_currentPiece;
 				comboSquares.push_back(northSquare);
 				this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(move->row, move->col) + N][this->getOppositePiece(this->_currentPiece)][northCard->ID];
 				this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(move->row, move->col) + N][this->_currentPiece][northCard->ID];					
@@ -267,9 +273,9 @@ void GameBoard::move(Move *move)
 		
 		if (flipSouth == true)
 		{
-			if (southSquare->owner == this->getOppositePiece(this->_currentPiece))
+			if (southOwner == this->getOppositePiece(this->_currentPiece))
 			{
-				southSquare->owner = this->_currentPiece;
+				this->_owners[ROWCOL_TO_SQUARE(move->row, move->col) + S] = this->_currentPiece;
 				comboSquares.push_back(southSquare);
 				this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(move->row, move->col) + S][this->getOppositePiece(this->_currentPiece)][southCard->ID];
 				this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(move->row, move->col) + S][this->_currentPiece][southCard->ID];
@@ -278,9 +284,9 @@ void GameBoard::move(Move *move)
 		
 		if (flipEast == true)
 		{
-			if (eastSquare->owner == this->getOppositePiece(this->_currentPiece))
+			if (eastOwner == this->getOppositePiece(this->_currentPiece))
 			{
-				eastSquare->owner = this->_currentPiece;
+				this->_owners[ROWCOL_TO_SQUARE(move->row, move->col) + E] = this->_currentPiece;
 				comboSquares.push_back(eastSquare);
 				this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(move->row, move->col) + E][this->getOppositePiece(this->_currentPiece)][eastCard->ID];
 				this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(move->row, move->col) + E][this->_currentPiece][eastCard->ID];
@@ -289,9 +295,9 @@ void GameBoard::move(Move *move)
 		
 		if (flipWest == true)
 		{
-			if (westSquare->owner == this->getOppositePiece(this->_currentPiece))
+			if (westOwner == this->getOppositePiece(this->_currentPiece))
 			{
-				westSquare->owner = this->_currentPiece;
+				this->_owners[ROWCOL_TO_SQUARE(move->row, move->col) + W] = this->_currentPiece;
 				comboSquares.push_back(westSquare);
 				this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(move->row, move->col) + W][this->getOppositePiece(this->_currentPiece)][westCard->ID];
 				this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(move->row, move->col) + W][this->_currentPiece][westCard->ID];
@@ -301,17 +307,17 @@ void GameBoard::move(Move *move)
 		// Execute any applicable combo rules.
 		while (comboSquares.size() > 0)
 		{
-			Square *baseSquare = comboSquares.front();
-			Card *baseCard = baseSquare->getCard();
+			std::shared_ptr<Square> baseSquare = comboSquares.front();
+			Card *baseCard = baseSquare->get_card();
 			comboSquares.pop_front();
 			
 			if (baseSquare->col > 0)
 			{
-				Square *attackSquare = this->_gameBoard + ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + W;
-				Card *attackCard = attackSquare->getCard();
-				if (attackSquare->owner == this->getOppositePiece(this->_currentPiece) && baseCard->left > attackCard->right)
+				std::shared_ptr<Square> attackSquare = this->_gameBoard[ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + W];
+				Card *attackCard = attackSquare->get_card();
+				if (this->_owners[ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + W] == this->getOppositePiece(this->_currentPiece) && baseCard->left > attackCard->right)
 				{
-					attackSquare->owner = this->_currentPiece;
+					this->_owners[ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + W] = this->_currentPiece;
 					comboSquares.push_back(attackSquare);
 					this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + W][this->getOppositePiece(this->_currentPiece)][attackCard->ID];
 					this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + W][this->_currentPiece][attackCard->ID];
@@ -319,11 +325,11 @@ void GameBoard::move(Move *move)
 			}
 			if (baseSquare->col > 0)
 			{
-				Square *attackSquare = this->_gameBoard + ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + N;
-				Card *attackCard = attackSquare->getCard();
-				if (attackSquare->owner == this->getOppositePiece(this->_currentPiece) && baseCard->top > attackCard->bottom)
+				std::shared_ptr<Square> attackSquare = this->_gameBoard[ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + N];
+				Card *attackCard = attackSquare->get_card();
+				if (this->_owners[ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + N] == this->getOppositePiece(this->_currentPiece) && baseCard->top > attackCard->bottom)
 				{
-					attackSquare->owner = this->_currentPiece;
+					this->_owners[ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + N] = this->_currentPiece;
 					comboSquares.push_back(attackSquare);
 					this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + N][this->getOppositePiece(this->_currentPiece)][attackCard->ID];
 					this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + N][this->_currentPiece][attackCard->ID];
@@ -331,11 +337,11 @@ void GameBoard::move(Move *move)
 			}
 			if (baseSquare->col < 2)
 			{
-				Square *attackSquare = this->_gameBoard + ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + E;
-				Card *attackCard = attackSquare->getCard();
-				if (attackSquare->owner == this->getOppositePiece(this->_currentPiece) && baseCard->right > attackCard->left)
+				std::shared_ptr<Square> attackSquare = this->_gameBoard[ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + E];
+				Card *attackCard = attackSquare->get_card();
+				if (this->_owners[ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + E] == this->getOppositePiece(this->_currentPiece) && baseCard->right > attackCard->left)
 				{
-					attackSquare->owner = this->_currentPiece;
+					this->_owners[ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + E] = this->_currentPiece;
 					comboSquares.push_back(attackSquare);
 					this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + E][this->getOppositePiece(this->_currentPiece)][attackCard->ID];
 					this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + E][this->_currentPiece][attackCard->ID];
@@ -343,11 +349,11 @@ void GameBoard::move(Move *move)
 			}
 			if (baseSquare->row < 2)
 			{
-				Square *attackSquare = this->_gameBoard + ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + S;
-				Card *attackCard = attackSquare->getCard();
-				if (attackSquare->owner == this->getOppositePiece(this->_currentPiece) && baseCard->bottom > attackCard->top)
+				std::shared_ptr<Square> attackSquare = this->_gameBoard[ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + S];
+				Card *attackCard = attackSquare->get_card();
+				if (this->_owners[ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + S] == this->getOppositePiece(this->_currentPiece) && baseCard->bottom > attackCard->top)
 				{
-					attackSquare->owner = this->_currentPiece;
+					this->_owners[ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + S] = this->_currentPiece;
 					comboSquares.push_back(attackSquare);
 					this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + S][this->getOppositePiece(this->_currentPiece)][attackCard->ID];
 					this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + S][this->_currentPiece][attackCard->ID];
@@ -358,44 +364,44 @@ void GameBoard::move(Move *move)
 		// Execute the basic flip rule for each of the four directions.
 		if (move->col > 0)
 		{
-			Square *attackSquare = this->_gameBoard + ROWCOL_TO_SQUARE(move->row, move->col) + W;
-			Card *attackCard = attackSquare->getCard();
-			if (attackSquare->owner == this->getOppositePiece(this->_currentPiece) && (baseCard->left + baseSquare.elementalBonus) > (attackCard->right + attackSquare->elementalBonus))
+			std::shared_ptr<Square> attackSquare = this->_gameBoard[ROWCOL_TO_SQUARE(move->row, move->col) + W];
+			Card *attackCard = attackSquare->get_card();
+			if (this->_owners[ROWCOL_TO_SQUARE(move->row, move->col) + W] == this->getOppositePiece(this->_currentPiece) && (baseCard->left + baseSquare->get_elemental_adjustment()) > (attackCard->right + attackSquare->get_elemental_adjustment()))
 			{
-				attackSquare->owner = this->_currentPiece;
+				this->_owners[ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + W] = this->_currentPiece;
 				this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(move->row, move->col) + W][this->getOppositePiece(this->_currentPiece)][attackCard->ID];
 				this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(move->row, move->col) + W][this->_currentPiece][attackCard->ID];
 			}
 		}
 		if (move->row > 0)
 		{
-			Square *attackSquare = this->_gameBoard + ROWCOL_TO_SQUARE(move->row, move->col) + N;
-			Card *attackCard = attackSquare->getCard();
-			if (attackSquare->owner == this->getOppositePiece(this->_currentPiece) && (baseCard->top + baseSquare.elementalBonus) > (attackCard->bottom + attackSquare->elementalBonus))
+			std::shared_ptr<Square> attackSquare = this->_gameBoard[ROWCOL_TO_SQUARE(move->row, move->col) + N];
+			Card *attackCard = attackSquare->get_card();
+			if (this->_owners[ROWCOL_TO_SQUARE(move->row, move->col) + N] == this->getOppositePiece(this->_currentPiece) && (baseCard->top + baseSquare->get_elemental_adjustment()) > (attackCard->bottom + attackSquare->get_elemental_adjustment()))
 			{
-				attackSquare->owner = this->_currentPiece;
+				this->_owners[ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + N] = this->_currentPiece;
 				this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(move->row, move->col) + N][this->getOppositePiece(this->_currentPiece)][attackCard->ID];
 				this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(move->row, move->col) + N][this->_currentPiece][attackCard->ID];
 			}
 		}
 		if (move->col < 2)
 		{
-			Square *attackSquare = this->_gameBoard + ROWCOL_TO_SQUARE(move->row, move->col) + E;
-			Card *attackCard = attackSquare->getCard();
-			if (attackSquare->owner == this->getOppositePiece(this->_currentPiece) && (baseCard->right + baseSquare.elementalBonus) > (attackCard->left + attackSquare->elementalBonus))
+			std::shared_ptr<Square> attackSquare = this->_gameBoard[ROWCOL_TO_SQUARE(move->row, move->col) + E];
+			Card *attackCard = attackSquare->get_card();
+			if (this->_owners[ROWCOL_TO_SQUARE(move->row, move->col) + E] == this->getOppositePiece(this->_currentPiece) && (baseCard->right + baseSquare->get_elemental_adjustment()) > (attackCard->left + attackSquare->get_elemental_adjustment()))
 			{
-				attackSquare->owner = this->_currentPiece;
+				this->_owners[ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + E] = this->_currentPiece;
 				this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(move->row, move->col) + E][this->getOppositePiece(this->_currentPiece)][attackCard->ID];
 				this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(move->row, move->col) + E][this->_currentPiece][attackCard->ID];
 			}
 		}
 		if (move->row < 2)
 		{
-			Square *attackSquare = this->_gameBoard + ROWCOL_TO_SQUARE(move->row, move->col) + S;
-			Card *attackCard = attackSquare->getCard();
-			if (attackSquare->owner == this->getOppositePiece(this->_currentPiece) && (baseCard->bottom + baseSquare.elementalBonus) > (attackCard->top + attackSquare->elementalBonus))
+			std::shared_ptr<Square> attackSquare = this->_gameBoard[ROWCOL_TO_SQUARE(move->row, move->col) + S];
+			Card *attackCard = attackSquare->get_card();
+			if (this->_owners[ROWCOL_TO_SQUARE(move->row, move->col) + S] == this->getOppositePiece(this->_currentPiece) && (baseCard->bottom + baseSquare->get_elemental_adjustment()) > (attackCard->top + attackSquare->get_elemental_adjustment()))
 			{
-				attackSquare->owner = this->_currentPiece;
+				this->_owners[ROWCOL_TO_SQUARE(baseSquare->row, baseSquare->col) + S] = this->_currentPiece;
 				this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(move->row, move->col) + S][this->getOppositePiece(this->_currentPiece)][attackCard->ID];
 				this->_zobristKey = this->_zobristKey ^ this->_zobristGrid[ROWCOL_TO_SQUARE(move->row, move->col) + S][this->_currentPiece][attackCard->ID];
 			}
@@ -404,16 +410,17 @@ void GameBoard::move(Move *move)
 		// Remove the current card from the player's list.
 		if (this->_currentPiece == PIECE_BLUE)
 		{
-			int oldSize = this->_blueCards.size();
+			size_t oldSize = this->_blueCards.size();
 			this->_blueCards.remove(move->card);
 			if (this->_blueCards.size() == oldSize)
 			{
-				std::cout << "Failed to remove blue card!" << std::endl;
+				std::cout << "Failed to remove blue card from " << (*move) << std::endl;
+				this->printBoard();
 			}
 		}
 		else
 		{
-			int oldSize = this->_redCards.size();
+			size_t oldSize = this->_redCards.size();
 			this->_redCards.remove(move->card);
 			if (this->_redCards.size() == oldSize)
 			{
@@ -431,9 +438,8 @@ void GameBoard::move(Move *move)
 	else
 	{
 		// Save the current board state.
-		Square *squareArray = new Square[BOARD_SIZE];
-		memcpy(squareArray, this->_gameBoard, sizeof(Square) * BOARD_SIZE);
-		this->_gameBoardStack.push(squareArray);
+		std::vector<Piece> squareArray(this->_owners);
+		this->_ownersStack.push(squareArray);
 		this->_pieceStack.push(this->_currentPiece);
 		this->_moveStack.push(this->_lastMove);
 		this->_cardStack.push(move->card);
@@ -445,9 +451,8 @@ void GameBoard::move(Move *move)
 void GameBoard::unmove()
 {
 	// Restore the game state.
-	Square* squareArray = (Square*)this->_gameBoardStack.top();
-	memcpy(this->_gameBoard, squareArray, sizeof(Square) * BOARD_SIZE);
-	delete[] squareArray;
+	this->_gameBoard[ROWCOL_TO_SQUARE(this->_lastMove->row, this->_lastMove->col)]->set_card(NULL);
+	this->_owners = this->_ownersStack.top();
 	this->_currentPiece = (Piece)this->_pieceStack.top();
 	this->_lastMove = (Move*)this->_moveStack.top();
 	this->_zobristKey = this->_zobristStack.top();
@@ -462,7 +467,7 @@ void GameBoard::unmove()
 		this->_redCards.push_back(this->_cardStack.top());
 	}	
 	
-	this->_gameBoardStack.pop();
+	this->_ownersStack.pop();
 	this->_pieceStack.pop();
 	this->_moveStack.pop();
 	this->_cardStack.pop();
@@ -479,7 +484,7 @@ int GameBoard::_squareZone[BOARD_SIZE] = { 0, 0, 0, 0,
 bool GameBoard::isValidMove(Move *move)
 {
 	// A valid move must take place in an empty square.
-	if (this->_gameBoard[ROWCOL_TO_SQUARE(move->row, move->col)].owner == PIECE_NONE)
+	if (this->_owners[ROWCOL_TO_SQUARE(move->row, move->col)] == PIECE_NONE)
 	{
 		// The current player must possess the card.
 		std::list<Card*>::iterator iter = (this->_currentPiece == PIECE_BLUE) ? this->_blueCards.begin() : this->_redCards.begin();
@@ -583,7 +588,7 @@ int GameBoard::getNumPieces(Piece piece)
 	
 	for (int i = 0; i < BOARD_SIZE; i++)
 	{
-		if (this->_gameBoard[i].owner == piece)
+		if (this->_owners[i] == piece)
 		{
 			number++;
 		}
@@ -608,11 +613,11 @@ void GameBoard::printBoard()
 	{
 		for (int col = 0; col < 3; col++)
 		{
-			if (this->_gameBoard[ROWCOL_TO_SQUARE(row, col)].owner == PIECE_BLUE)
+			if (this->_owners[ROWCOL_TO_SQUARE(row, col)] == PIECE_BLUE)
 			{
 				std::cout << "B";
 			}
-			else if (this->_gameBoard[ROWCOL_TO_SQUARE(row, col)].owner == PIECE_RED)
+			else if (this->_owners[ROWCOL_TO_SQUARE(row, col)] == PIECE_RED)
 			{
 				std::cout << "R";
 			}
@@ -727,7 +732,7 @@ void GameBoard::drawBoard(SDL_Surface *surface)
 			}
 			
 			// Draw the square's element.
-			switch (this->_gameBoard[ROWCOL_TO_SQUARE(row, col)].element)
+			switch (this->_gameBoard[ROWCOL_TO_SQUARE(row, col)]->element)
 			{
 				case ELEMENT_NONE: break;
 				case ELEMENT_FIRE: stringRGBA(surface, colOffset2 + 5, rowOffset2 + 6, "Fire", 255, 255, 255, 255); break;
@@ -735,18 +740,18 @@ void GameBoard::drawBoard(SDL_Surface *surface)
 			}
 			
 			// Draw the card's color, if there is a card.
-			switch (this->_gameBoard[ROWCOL_TO_SQUARE(row, col)].owner)
+			switch (this->_owners[ROWCOL_TO_SQUARE(row, col)])
 			{
 				case PIECE_BLUE:
 					boxRGBA(surface, colOffset2 + 5, rowOffset2 + 20, colOffset2 + 5 + 89, rowOffset2 + 20 + 74, 0, 0, 0, 255);
 					boxRGBA(surface, colOffset2 + 6, rowOffset2 + 21, colOffset2 + 6 + 87, rowOffset2 + 21 + 72, 0, 0, 128, 255);
-					this->_gameBoard[ROWCOL_TO_SQUARE(row, col)].getCard()->draw(surface, colOffset2 + 6, rowOffset2 + 21);
+					this->_gameBoard[ROWCOL_TO_SQUARE(row, col)]->get_card()->draw(surface, colOffset2 + 6, rowOffset2 + 21);
 					break;
 					
 				case PIECE_RED:
 					boxRGBA(surface, colOffset2 + 5, rowOffset2 + 20, colOffset2 + 5 + 89, rowOffset2 + 20 + 74, 0, 0, 0, 255);
 					boxRGBA(surface, colOffset2 + 6, rowOffset2 + 21, colOffset2 + 6 + 87, rowOffset2 + 21 + 72, 128, 0, 0, 255);
-					this->_gameBoard[ROWCOL_TO_SQUARE(row, col)].getCard()->draw(surface, colOffset2 + 6, rowOffset2 + 21);
+					this->_gameBoard[ROWCOL_TO_SQUARE(row, col)]->get_card()->draw(surface, colOffset2 + 6, rowOffset2 + 21);
 					break;
 					
 				default:
@@ -754,7 +759,7 @@ void GameBoard::drawBoard(SDL_Surface *surface)
 			}
 			
 			// Draw the elemental bonus, if applicable.
-			switch (this->_gameBoard[ROWCOL_TO_SQUARE(row, col)].elementalBonus)
+			switch (this->_gameBoard[ROWCOL_TO_SQUARE(row, col)]->get_elemental_adjustment())
 			{
 				case 1:  stringRGBA(surface, colOffset2 + 40, rowOffset2 + 75, "+1", 255, 255, 255, 255); break;
 				case -1: stringRGBA(surface, colOffset2 + 40, rowOffset2 + 75, "-1", 255, 255, 255, 255); break;
@@ -764,7 +769,7 @@ void GameBoard::drawBoard(SDL_Surface *surface)
 	}
 }
 
-Square* const GameBoard::getBoard()
+std::vector<std::shared_ptr<Square>> GameBoard::getBoard()
 {
 	return this->_gameBoard;
 }
@@ -775,7 +780,7 @@ int GameBoard::getEmptySquares()
 	
 	for (int i = 0; i < BOARD_SIZE; i++)
 	{
-		if (this->_gameBoard[i].owner == PIECE_NONE)
+		if (this->_owners[i] == PIECE_NONE)
 		{
 			number++;
 		}

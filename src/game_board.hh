@@ -3,7 +3,9 @@
 
 #include <list>
 #include <map>
+#include <memory>
 #include <stack>
+#include <vector>
 
 #include "SDL.h"
 #include "SDL_gfxPrimitives.h"
@@ -57,7 +59,7 @@ class GameBoard
 		void drawBoard(SDL_Surface *surface);
 
 		// Returns a pointer to the board for evaluation functions to use.
-		Square* const getBoard();
+		std::vector<std::shared_ptr<Square>> getBoard();
 
 		// Returns the number of empty squares.
 		int getEmptySquares();
@@ -82,7 +84,8 @@ class GameBoard
 
 		// Array that serves as the actual game board.
 		// We use a single-dimensional array with sentry squares, for a total size of 21 squares.
-		Square _gameBoard[BOARD_SIZE];
+		std::vector<std::shared_ptr<Square>> _gameBoard;
+		std::vector<Piece> _owners;
 
 		// Array of zones, for determining which flip directions are possible.
 		static int _squareZone[BOARD_SIZE];
@@ -91,7 +94,7 @@ class GameBoard
 		Piece _currentPiece;
 
 		// Series of stacks for saving the board state.
-		std::stack<Square*> _gameBoardStack;
+		std::stack<std::vector<Piece>> _ownersStack;
 		std::stack<Piece> _pieceStack;
 		std::stack<Move*> _moveStack;
 		std::stack<unsigned long long> _zobristStack;

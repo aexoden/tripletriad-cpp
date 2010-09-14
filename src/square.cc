@@ -20,28 +20,35 @@
  * SOFTWARE.
  */
 
-#ifndef TRIPLETRIAD_SQUARE_HH
-#define TRIPLETRIAD_SQUARE_HH
+#include "card.hh"
+#include "square.hh"
 
-#include "common.hh"
+Square::Square(int row, int col, Element element) :
+	row(row),
+	col(col),
+	element(element),
+	_card(NULL)
+{ }
 
-class Card;
-
-class Square
+Card * Square::get_card() const
 {
-	public:
-		Square(int row, int col, Element element);
+	return this->_card;
+}
 
-		Card * get_card() const;
-		void set_card(Card * card);
+void Square::set_card(Card * card)
+{
+	this->_card = card;
+}
 
-		int get_elemental_adjustment() const;
-		
-		const int row, col;
-		Element element;
+int Square::get_elemental_adjustment() const
+{
+	if (this->_card && this->element != ELEMENT_NONE && this->_card->element != ELEMENT_NONE)
+	{
+		if (this->element == this->_card->element)
+			return 1;
+		else
+			return -1;
+	}
 
-	private:
-		Card * _card;
-};
-
-#endif
+	return 0;
+}
