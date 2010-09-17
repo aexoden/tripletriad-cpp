@@ -58,7 +58,7 @@ std::shared_ptr<Move> Player::get_move()
 			this->_test_board->move(*iter);
 
 			complete = true;
-			int score = this->_search_negamax(ply - 1, complete, positions);
+			int score = this->_search_minimax(ply - 1, complete, positions);
 
 			this->_test_board->unmove();
 
@@ -82,7 +82,7 @@ std::shared_ptr<Move> Player::get_move()
 	return best_move;
 }
 
-int Player::_search_negamax(int max_ply, bool & complete, int & positions)
+int Player::_search_minimax(int max_ply, bool & complete, int & positions)
 {
 	if (positions % 1000 == 0)
 		TripleTriad::get_instance()->checkEvent(false);
@@ -97,14 +97,25 @@ int Player::_search_negamax(int max_ply, bool & complete, int & positions)
 
 	int best_score = std::numeric_limits<int>::min();
 
+	if (this->_test_board->get_current_piece() != this->_my_piece)
+		best_score = std::numeric_limits<int>::max();
+
 	for (auto iter = moves.begin(); iter != moves.end(); iter++)
 	{
 		this->_test_board->move(*iter);
-		int score = this->_search_negamax(max_ply - 1, complete, positions);
+		int score = this->_search_minimax(max_ply - 1, complete, positions);
 		this->_test_board->unmove();
 
-		if (score > best_score)
-			best_score = score;
+		if (this->_test_board->get_current_piece() == this->_my_piece)
+		{
+			if (score > best_score)
+				best_score = score;
+		}
+		else
+		{
+			if (score < best_score)
+				best_score = score;
+		}
 
 		positions++;
 	}
