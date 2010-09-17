@@ -1,6 +1,7 @@
 #include <iostream>
 #include <list>
 
+#include "card.hh"
 #include "game_board.hh"
 #include "player.hh"
 
@@ -16,25 +17,24 @@ TripleTriad::TripleTriad()
 		SDL_Quit();
 	}
 
-	std::list<Card*> redCards;
-	std::list<Card*> blueCards;
+	std::set<std::shared_ptr<Card>> cards;
 
 	// Configure the cards.
-	redCards.push_back(new Card(9, 7, 3, 6, ELEMENT_NONE));
-	redCards.push_back(new Card(1, 4, 1, 5, ELEMENT_NONE));
-	redCards.push_back(new Card(3, 3, 6, 7, ELEMENT_NONE));
-	redCards.push_back(new Card(3, 2, 1, 5, ELEMENT_NONE));
-	redCards.push_back(new Card(5, 1, 3, 1, ELEMENT_NONE));
+	cards.insert(std::shared_ptr<Card>(new Card(PIECE_RED, 9, 7, 3, 6, ELEMENT_NONE)));
+	cards.insert(std::shared_ptr<Card>(new Card(PIECE_RED, 1, 4, 1, 5, ELEMENT_NONE)));
+	cards.insert(std::shared_ptr<Card>(new Card(PIECE_RED, 3, 3, 6, 7, ELEMENT_NONE)));
+	cards.insert(std::shared_ptr<Card>(new Card(PIECE_RED, 3, 2, 1, 5, ELEMENT_NONE)));
+	cards.insert(std::shared_ptr<Card>(new Card(PIECE_RED, 5, 1, 3, 1, ELEMENT_NONE)));
 	
-	blueCards.push_back(new Card(6, 10, 4, 9, ELEMENT_NONE));
-	blueCards.push_back(new Card(8, 10, 6, 5, ELEMENT_NONE));
-	blueCards.push_back(new Card(9, 10, 2, 6, ELEMENT_NONE));
-	blueCards.push_back(new Card(5, 8, 2, 10, ELEMENT_NONE));
-	blueCards.push_back(new Card(9, 2, 8, 6, ELEMENT_NONE));	
+	cards.insert(std::shared_ptr<Card>(new Card(PIECE_BLUE, 6, 10, 4, 9, ELEMENT_NONE)));
+	cards.insert(std::shared_ptr<Card>(new Card(PIECE_BLUE, 8, 10, 6, 5, ELEMENT_NONE)));
+	cards.insert(std::shared_ptr<Card>(new Card(PIECE_BLUE, 9, 10, 2, 6, ELEMENT_NONE)));
+	cards.insert(std::shared_ptr<Card>(new Card(PIECE_BLUE, 5, 8, 2, 10, ELEMENT_NONE)));
+	cards.insert(std::shared_ptr<Card>(new Card(PIECE_BLUE, 9, 2, 8, 6, ELEMENT_NONE)));	
 	
 	// Configure the game board and its rules.
 	// GameBoard(start_piece, blue_cards, red_cards, same, plus, same wall, elemental)
-	this->_gameBoard = new GameBoard(PIECE_BLUE, blueCards, redCards, true, false, false, false);
+	this->_gameBoard = new GameBoard(false, false, false, false, PIECE_RED, cards);
 }
 
 TripleTriad::~TripleTriad()
@@ -47,11 +47,11 @@ void TripleTriad::run()
 	Player *firstPlayer = new Player(this, this->_gameBoard, PIECE_BLUE, PIECE_RED);
 	Player *secondPlayer = new Player(this, this->_gameBoard, PIECE_RED, PIECE_BLUE);
 
-	while (this->_gameBoard->gameComplete() == false)
+	while (!this->_gameBoard->get_valid_moves().empty())
 	{
-		this->_gameBoard->drawBoard(this->_surface);
+		this->_gameBoard->render(this->_surface);
 		SDL_Flip(this->_surface);
-		if (this->_gameBoard->getCurrentPiece() == PIECE_BLUE)
+		if (this->_gameBoard->get_current_piece() == PIECE_BLUE)
 		{
 			
 			unsigned int start = SDL_GetTicks();
@@ -67,14 +67,14 @@ void TripleTriad::run()
 		}
 	}
 
-	int firstPieces = this->_gameBoard->getNumPieces(PIECE_BLUE);
-	int secondPieces = this->_gameBoard->getNumPieces(PIECE_RED);
+	int firstPieces = this->_gameBoard->get_score(PIECE_BLUE);
+	int secondPieces = this->_gameBoard->get_score(PIECE_RED);
 	
-	this->_gameBoard->printBoard();
+//	this->_gameBoard->printBoard();
 	std::cout << "Final score: Blue: " << firstPieces << "   Red: " << secondPieces << std::endl;
 
 	// Loop until the user exits.
-	this->_gameBoard->drawBoard(this->_surface);
+	this->_gameBoard->render(this->_surface);
 	SDL_Flip(this->_surface);
 	while (true)
 	{
@@ -97,6 +97,10 @@ bool TripleTriad::checkEvent(bool getHumanCard)
 		{
 			switch (event.type)
 			{
+				case SDL_QUIT:
+					exit(0);
+					break;
+
 				case SDL_KEYDOWN:
 					if (event.key.keysym.sym == SDLK_q)
 					{
@@ -116,11 +120,27 @@ bool TripleTriad::checkEvent(bool getHumanCard)
 					}
 					else if (getHumanDestination == true)
 					{
-						Move *move = this->_gameBoard->getMove((event.button.y - 121) / 101, (event.button.x - 110) / 101, this->_cardChosen);
-						if (move != NULL)
+						int row = (event.button.y - 121) / 101;
+						int col = (event.button.x - 110) / 101;
+
+						std::set<std::shared_ptr<Move>> moves = this->_gameBoard->get_valid_moves();
+
+						std::set<std::shared_ptr<Move>>::iterator iter;
+						int index = 0;
+
+						for (iter = moves.begin(); iter != moves.end(); iter++)
 						{
-							this->_gameBoard->move(move);
-							getHumanDestination = false;
+							if ((*iter)->row == row && (*iter)->col == col)
+							{
+								if (index == this->_cardChosen)
+								{
+									this->_gameBoard->move((*iter));
+									getHumanDestination = false;
+									break;
+								}
+								else
+									index++;
+							}
 						}
 					}
 					break;

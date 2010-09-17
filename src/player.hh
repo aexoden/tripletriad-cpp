@@ -1,9 +1,8 @@
-#ifndef PLAYER_H
-#define PLAYER_H
-
-#include "transposition_table.hh"
+#ifndef TRIPLETRIAD_PLAYER_HH
+#define TRIPLETRIAD_PLAYER_HH
 
 #include "game_board.hh"
+#include "transposition_table.hh"
 
 class TripleTriad;
 

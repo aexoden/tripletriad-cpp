@@ -1,134 +1,66 @@
-#ifndef GAMEBOARD_H
-#define GAMEBOARD_H
+/*
+ * Copyright (c) 2010 Jason Lynch <jason@calindora.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
-#include <list>
-#include <map>
+#ifndef TRIPLETRIAD_GAME_BOARD_HH
+#define TRIPLETRIAD_GAME_BOARD_HH
+
 #include <memory>
+#include <set>
 #include <stack>
 #include <vector>
 
-#include "SDL.h"
-#include "SDL_gfxPrimitives.h"
-
-#include "card.hh"
 #include "common.hh"
-#include "move.hh"
-#include "square.hh"
+
+class Card;
+class Move;
+class Square;
 
 class GameBoard
 {
 	public:
-		// Constructor for the gameboard. We require lots of information.
-		// TODO: This will need to be revised once non-Open games are
-		//       allowed. It only needs the cards to generate moves, so
-		//       it can use dummy cards or something.
-		GameBoard(Piece startPiece, std::list<Card*> blueCards, std::list<Card*> redCards, bool isSame, bool isPlus, bool isSameWall, bool isElemental);
-		
-		// Two methods to handle both moving, and unmoving.
-		void move(Move *move);
+		GameBoard(bool same, bool plus, bool same_wall, bool elemental, Piece first_piece, std::set<std::shared_ptr<Card>> cards);
+
+		void move(std::shared_ptr<Move> move);
 		void unmove();
 
-		// Verifies that a given move is valid.
-		bool isValidMove(Move *move);
+		Piece get_current_piece();
 
-		// In order to traverse the various directions on this board, we need a few constants.
-		enum Direction
-		{
-			NW = -5,
-			N  = -4,
-			NE = -3,
-			W  = -1,
-			E  =  1,
-			SW =  3,
-			S  =  4,
-			SE =  5
-		};
+		int get_score(Piece piece);
 
-		// Returns the valid move list for a given piece.
-		void getMoveList(std::list<Move*> &moveList, Piece piece);
-		Move* getMove(int row, int col, int index);
+		bool is_valid_move(std::shared_ptr<Move> move);
 
-		// Returns whether or not the game is complete.
-		bool gameComplete();
+		std::set<std::shared_ptr<Move>> get_valid_moves();
 
-		// Returns the number of pieces the given piece has on the board.
-		int getNumPieces(Piece piece);
-
-		// Display the board.
-		void printBoard();
-		void drawBoard(SDL_Surface *surface);
-
-		// Returns a pointer to the board for evaluation functions to use.
-		std::vector<std::shared_ptr<Square>> getBoard();
-
-		// Returns the number of empty squares.
-		int getEmptySquares();
-
-		// Returns the current zobrist key of the board.
-		unsigned long long getZobristKey() { return this->_zobristKey; }
-
-		// Returns the current piece to move.
-		Piece getCurrentPiece() { return this->_currentPiece; }
-
-		// Returns the opposite of the given piece.
-		Piece getOppositePiece(Piece piece) { return (piece == PIECE_BLUE) ? PIECE_RED : PIECE_BLUE; }
-
+		void render(SDL_Surface * surface);
 	private:
-		// Generates 64 bits of random data. 
-		unsigned long long rand64();
+		Piece _current_piece;
+		bool _same, _plus, _same_wall, _elemental;
 
-		// Constant specifying the size of the board.
-		// 3 rows of 3 squares, a sentry square for each row, two rows of sentry squares,
-		// and one additional sentry square at the end.
-		static const int BOARD_SIZE = 21;
+		std::set<std::shared_ptr<Card>> _cards;
 
-		// Array that serves as the actual game board.
-		// We use a single-dimensional array with sentry squares, for a total size of 21 squares.
-		std::vector<std::shared_ptr<Square>> _gameBoard;
-		std::vector<Piece> _owners;
+		std::vector<std::vector<std::shared_ptr<Square>>> _board;
 
-		// Array of zones, for determining which flip directions are possible.
-		static int _squareZone[BOARD_SIZE];
-		
-		// The piece whose turn it currently is.
-		Piece _currentPiece;
-
-		// Series of stacks for saving the board state.
-		std::stack<std::vector<Piece>> _ownersStack;
-		std::stack<Piece> _pieceStack;
-		std::stack<Move*> _moveStack;
-		std::stack<unsigned long long> _zobristStack;
-		std::stack<Card*> _cardStack;
-		
-		// The rules of the game.
-		bool _isSame;
-		bool _isPlus;
-		bool _isSameWall;
-		bool _isElemental;
-		
-		// The list of cards for each player.
-		std::list<Card*> _blueCards;
-		std::list<Card*> _redCards;
-		
-		// The available moves.
-		std::map<Card*, Move*> _moveMap[3][3];
-
-		// The current zobrist key of the board.
-		unsigned long long _zobristKey;
-
-		// Zobrist key elements. We use the same square number as the real grid, which
-		// means there are some useless entries, but that's okay.
-		unsigned long long _zobristGrid[BOARD_SIZE][4][10];
-		unsigned long long _zobristRed;
-
-		// The last move that was made.
-		Move *_lastMove;
+		std::stack<std::shared_ptr<Move>> _move_history;
+		std::stack<std::set<std::shared_ptr<Card>>> _card_history;
 };
-
-// Macros for fast conversion of a square number to row and column, and vice-versa.
-// Converts to a 0-indexed system, and *ignores* sentry squares.
-#define SQUARE_TO_ROW(x) (((x) / 4) - 1)
-#define SQUARE_TO_COL(x) (((x) - 1) % 4)
-#define ROWCOL_TO_SQUARE(x, y) ((((x) + 1) * 4) + ((y) + 1))
 
 #endif

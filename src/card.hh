@@ -1,49 +1,58 @@
-#ifndef CARD_H
-#define CARD_H
+/*
+ * Copyright (c) 2010 Jason Lynch <jason@calindora.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+#ifndef TRIPLETRIAD_CARD_HH
+#define TRIPLETRIAD_CARD_HH
 
 #include <iostream>
+#include <memory>
 
 #include "SDL.h"
-#include "SDL_gfxPrimitives.h"
 
 #include "common.hh"
+
+class Square;
 
 class Card
 {
 	public:
-		Card(int top, int bottom, int left, int right, Element element)
-		{
-			this->top = top;
-			this->bottom = bottom;
-			this->left = left;
-			this->right = right;
-			this->element = element;
-			
-			this->ID = Card::nextID;
-			Card::nextID++;
-		}
-		
-		// Method for the card to draw itself.
-		void draw(SDL_Surface *surface, int colOffset, int rowOffset);
+		Card(Piece owner, int top, int bottom, int left, int right, Element element);
 
-		// Stream insertion operator for printing this move.
-		friend std::ostream& operator<<(std::ostream &stream, const Card &card);
+		void render(SDL_Surface * surface, int col, int row) const;
 
-		// The attack values of the card.
-		int top;
-		int bottom;
-		int left;
-		int right;
-		
-		// The card's unique ID
-		int ID;
-		
-		// The element of the card.
-		Element element;
-		
+		Piece get_owner() const;
+		void set_owner(Piece owner);
+
+		std::shared_ptr<Square> get_square() const;
+		void set_square(std::shared_ptr<Square> square);
+
+		friend std::ostream & operator<<(std::ostream & stream, const Card & card);
+
+		const int top, bottom, left, right;
+		const Element element;
+
 	private:
-		// The current index.
-		static int nextID;
+		Piece _owner;
+		std::shared_ptr<Square> _square;
 };
 
 #endif

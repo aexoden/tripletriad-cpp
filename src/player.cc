@@ -1,6 +1,9 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <list>
+#include <memory>
+#include <set>
 
 #include "tripletriad.hh"
 #include "player.hh"
@@ -39,7 +42,7 @@ void Player::move(unsigned int moveTime)
 	this->_gameBoard = new GameBoard(*(this->_realGameBoard));
 
 	int currentPly = 1;
-	Move *moveToMake = NULL;
+	std::shared_ptr<Move> moveToMake;
 	this->_moveTime = SDL_GetTicks() + moveTime;
 	this->_abortedPly = false;
 
@@ -53,27 +56,26 @@ void Player::move(unsigned int moveTime)
 	{
 		// Declare necessary variables.
 		int bestValue = std::numeric_limits<int>::min();
-		Move *bestMove;
+		std::shared_ptr<Move> bestMove;
 		this->_positions = 0;
 		this->_currentPly = 0;
 		this->_maxPly = 0;
 
 		// Get the list of moves.
-		std::list<Move*> moveList;
-		this->_gameBoard->getMoveList(moveList, this->_myPiece);
+		std::set<std::shared_ptr<Move>> moveList = this->_gameBoard->get_valid_moves();
 
 		// Iterate through the list, finding the best one.
-		std::list<Move*>::iterator iter = moveList.begin();
+		std::set<std::shared_ptr<Move>>::iterator iter = moveList.begin();
 		while (iter != moveList.end() && continueSearch == true)
 		{
 			// Make the move on the board.
 			//std::cout << "move(): Trying to move " << (*(*iter)) << std::endl;
 			this->_gameBoard->move(*iter);
 			this->_positions++;
-			//int value = this->minimaxSearch(currentPly - 1);
+			int value = this->minimaxSearch(currentPly - 1);
 			//int value = this->alphaBetaSearch(currentPly - 1, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
 			//int value = this->alphaBetaMemorySearch(currentPly - 1, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
-			int value = this->MTDSearch(currentPly - 1, firstGuess);
+			//int value = this->MTDSearch(currentPly - 1, firstGuess);
 			this->_gameBoard->unmove();
 
 			if (this->_abortedPly == true)
@@ -101,7 +103,7 @@ void Player::move(unsigned int moveTime)
 			std::cout << std::left;
 			std::cout << std::setw(12) << "Search Ply:" << std::setw(4) << currentPly;
 			std::cout << std::setw(11) << "Positions:" << std::setw(12) << this->_positions;
-			std::cout << std::setw(6) << "Move:" << std::setw(8) << (*bestMove);
+			std::cout << std::setw(6) << "Move:" << std::setw(30) << (*bestMove);
 			std::cout << std::setw(10) << " Utility:" << std::setw(10) << bestValue << std::endl;
 		}
 		else
@@ -116,7 +118,7 @@ void Player::move(unsigned int moveTime)
 	this->_searchCount++;
 
 	std::cout << moveToMake << std::endl;
-	if (moveToMake == NULL || this->_realGameBoard->isValidMove(moveToMake) == false)
+	if (moveToMake == NULL || this->_realGameBoard->is_valid_move(moveToMake) == false)
 	{
 		if (moveToMake == NULL)
 		{
@@ -127,9 +129,8 @@ void Player::move(unsigned int moveTime)
 			std::cout << "ERROR: moveToMake was an invalid move. Replacing with first available valid move." << std::endl;
 		}
 
-		std::list<Move*> moveList;
-		this->_realGameBoard->getMoveList(moveList, this->_myPiece);
-		moveToMake = moveList.front();
+		std::set<std::shared_ptr<Move>> moveList = this->_realGameBoard->get_valid_moves();
+		moveToMake = *(moveList.begin());
 	}
 	this->_realGameBoard->move(moveToMake);
 	std::cout << "-------------------------" << std::endl;
@@ -153,29 +154,38 @@ int Player::minimaxSearch(int ply)
 		return 0;
 	}
 
+	if (this->_positions % 50000 == 0)
+	{
+		if (this->_game->checkEvent(false) == true)
+		{
+			this->_abortedPly = true;
+			return 0;
+		}
+	}
+
 	// Set the maximum ply.
 	this->_currentPly++;
 	if (this->_currentPly > this->_maxPly)
 	{
 		this->_maxPly = this->_currentPly;
 	}
+	// Get the list of available moves.
+	std::set<std::shared_ptr<Move>> moveList = this->_gameBoard->get_valid_moves();
 
 	// Check for a terminal node.
-	if (this->_gameBoard->gameComplete() || ply == 0)
+	if (moveList.empty() || ply == 0)
 	{
 		this->_currentPly--;
 		return this->evaluateBoard();
 	}
 
-	// Get the list of available moves.
-	std::list<Move*> moveList;
-	this->_gameBoard->getMoveList(moveList, this->_gameBoard->getCurrentPiece());
+
 
 	// Set the initial best value.
-	int bestValue = (this->_gameBoard->getCurrentPiece() == this->_myPiece) ? std::numeric_limits<int>::min() : std::numeric_limits<int>::max();
+	int bestValue = (this->_gameBoard->get_current_piece() == this->_myPiece) ? std::numeric_limits<int>::min() : std::numeric_limits<int>::max();
 
 	// Iterate through the moves, finding the best one.
-	std::list<Move*>::iterator iter = moveList.begin();
+	std::set<std::shared_ptr<Move>>::iterator iter = moveList.begin();
 	while (iter != moveList.end())
 	{
 		// Make the move on the board.
@@ -184,7 +194,7 @@ int Player::minimaxSearch(int ply)
 		int value = this->minimaxSearch(ply - 1);
 		this->_gameBoard->unmove();
 
-		if (this->_gameBoard->getCurrentPiece() == this->_myPiece)
+		if (this->_gameBoard->get_current_piece() == this->_myPiece)
 		{
 			if (value > bestValue)
 			{
@@ -205,7 +215,7 @@ int Player::minimaxSearch(int ply)
 	this->_currentPly--;
 	return bestValue;
 }
-
+/*
 int Player::alphaBetaSearch(int ply, int alpha, int beta)
 {
 	// Check for time violation.
@@ -243,7 +253,7 @@ int Player::alphaBetaSearch(int ply, int alpha, int beta)
 	{
 		// Get the list of available moves.
 		std::list<Move*> moveList;
-		this->_gameBoard->getMoveList(moveList, this->_gameBoard->getCurrentPiece());
+		this->_gameBoard->get_valid_moves(moveList, this->_gameBoard->getCurrentPiece());
 		
 		if (this->_gameBoard->getCurrentPiece() == this->_myPiece)
 		{
@@ -360,7 +370,7 @@ int Player::alphaBetaMemorySearch(int ply, int alpha, int beta)
 	{
 		// Get the list of available moves.
 		std::list<Move*> moveList;
-		this->_gameBoard->getMoveList(moveList, this->_gameBoard->getCurrentPiece());
+		this->_gameBoard->get_valid_moves(moveList, this->_gameBoard->getCurrentPiece());
 		if (tableEntry->bestMove != NULL)
 		{
 			moveList.remove(tableEntry->bestMove);
@@ -488,20 +498,20 @@ int Player::MTDSearch(int ply, int firstGuess)
 
 	return returnValue;
 }
-
+*/
 int Player::evaluateBoard()
 {
 	int pieceScore = 0;
 	
 	// Determine the piece count score.
-	int myPieces = this->_gameBoard->getNumPieces(this->_myPiece);
-	int opponentPieces = this->_gameBoard->getNumPieces(this->_opponentPiece);
+	int myPieces = this->_gameBoard->get_score(this->_myPiece);
+	int opponentPieces = this->_gameBoard->get_score(this->_opponentPiece);
 	pieceScore += myPieces;
 	pieceScore -= opponentPieces;
 	if (pieceScore % 2 == 1)
 	{
 		std::cout << "I have " << myPieces << " cards and you have " << opponentPieces << " cards." << std::endl;
-		this->_gameBoard->printBoard();
+//		this->_gameBoard->printBoard();
 	}
 	
 	return pieceScore;
@@ -519,9 +529,9 @@ int Player::evaluateBoard()
 
 	// Determine mobility.
 	std::list<Move*> moveList;
-	this->_gameBoard->getMoveList(moveList, this->_myPiece);
+	this->_gameBoard->get_valid_moves(moveList, this->_myPiece);
 	mobilityScore += (int)moveList.size();
-	this->_gameBoard->getMoveList(moveList, this->_opponentPiece);
+	this->_gameBoard->get_valid_moves(moveList, this->_opponentPiece);
 	mobilityScore -= (int)moveList.size();
 
 	// Determine the piece count score.

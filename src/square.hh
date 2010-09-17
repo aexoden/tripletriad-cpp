@@ -23,6 +23,8 @@
 #ifndef TRIPLETRIAD_SQUARE_HH
 #define TRIPLETRIAD_SQUARE_HH
 
+#include <memory>
+
 #include "common.hh"
 
 class Card;
@@ -32,8 +34,8 @@ class Square
 	public:
 		Square(int row, int col, Element element);
 
-		Card * get_card() const;
-		void set_card(Card * card);
+		std::shared_ptr<Card> get_card() const;
+		void set_card(std::shared_ptr<Card> card);
 
 		int get_elemental_adjustment() const;
 		
@@ -41,7 +43,7 @@ class Square
 		Element element;
 
 	private:
-		Card * _card;
+		std::shared_ptr<Card> _card;
 };
 
 #endif

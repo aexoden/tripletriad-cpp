@@ -27,15 +27,15 @@ Square::Square(int row, int col, Element element) :
 	row(row),
 	col(col),
 	element(element),
-	_card(NULL)
+	_card()
 { }
 
-Card * Square::get_card() const
+std::shared_ptr<Card> Square::get_card() const
 {
 	return this->_card;
 }
 
-void Square::set_card(Card * card)
+void Square::set_card(std::shared_ptr<Card> card)
 {
 	this->_card = card;
 }
