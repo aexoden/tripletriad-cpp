@@ -25,6 +25,7 @@
 
 #include "card.hh"
 #include "game_board.hh"
+#include "move.hh"
 #include "player.hh"
 
 #include "tripletriad.hh"
@@ -76,8 +77,8 @@ std::shared_ptr<TripleTriad> TripleTriad::get_instance()
 
 void TripleTriad::run()
 {
-	Player *firstPlayer = new Player(this->_gameBoard, PIECE_BLUE, PIECE_RED);
-	Player *secondPlayer = new Player(this->_gameBoard, PIECE_RED, PIECE_BLUE);
+	Player *firstPlayer = new Player(std::shared_ptr<GameBoard>(this->_gameBoard), PIECE_BLUE, PIECE_RED);
+//	Player *secondPlayer = new Player(this->_gameBoard, PIECE_RED, PIECE_BLUE);
 
 	while (!this->_gameBoard->get_valid_moves().empty())
 	{
@@ -85,9 +86,10 @@ void TripleTriad::run()
 		SDL_Flip(this->_surface);
 		if (this->_gameBoard->get_current_piece() == PIECE_BLUE)
 		{
-			
 			unsigned int start = SDL_GetTicks();
-			firstPlayer->move(1500000);
+			std::shared_ptr<Move> move = firstPlayer->get_move();
+			this->_gameBoard->move(move);
+
 			std::cout << "Time taken: " << ((SDL_GetTicks() - start) / 1000.0) << "s" << std::endl;
 		}
 		else
@@ -114,7 +116,7 @@ void TripleTriad::run()
 	}
 
 	delete firstPlayer;
-	delete secondPlayer;
+//	delete secondPlayer;
 }
 
 bool TripleTriad::checkEvent(bool getHumanCard)

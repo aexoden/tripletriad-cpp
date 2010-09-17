@@ -28,6 +28,8 @@
 #include <stack>
 #include <vector>
 
+#include "SDL.h"
+
 #include "common.hh"
 
 class Card;
@@ -38,6 +40,7 @@ class GameBoard
 {
 	public:
 		GameBoard(bool same, bool plus, bool same_wall, bool elemental, Piece first_piece, std::set<std::shared_ptr<Card>> cards);
+		GameBoard(const GameBoard & board);
 
 		void move(std::shared_ptr<Move> move);
 		void unmove();

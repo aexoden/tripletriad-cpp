@@ -20,6 +20,8 @@
  * SOFTWARE.
  */
 
+#include <map>
+
 #include "SDL_gfxPrimitives.h"
 
 #include "card.hh"
@@ -43,6 +45,46 @@ GameBoard::GameBoard(bool same, bool plus, bool same_wall, bool elemental, Piece
 		for (int j = 0; j < 3; j++)
 		{
 			this->_board[i][j] = std::shared_ptr<Square>(new Square(i, j, ELEMENT_NONE));
+		}
+	}
+}
+
+GameBoard::GameBoard(const GameBoard & board) :
+	_current_piece(board._current_piece),
+	_same(board._same),
+	_plus(board._plus),
+	_same_wall(board._same_wall),
+	_elemental(board._elemental),
+	_cards(),
+	_board(3, std::vector<std::shared_ptr<Square>>(3)),
+	_move_history(),
+	_card_history()
+{
+	std::map<std::shared_ptr<Card>, std::shared_ptr<Card>> card_map;
+
+	for (std::set<std::shared_ptr<Card>>::iterator iter = board._cards.begin(); iter != board._cards.end(); iter++)
+	{
+		std::shared_ptr<Card> card(new Card(**iter));
+
+		card_map[*iter] = card;
+
+		this->_cards.insert(card);
+	}
+
+	for (int i = 0; i < 3; i++)
+	{
+		for (int j = 0; j < 3; j++)
+		{
+			this->_board[i][j] = std::shared_ptr<Square>(new Square(*(board._board[i][j])));
+			std::shared_ptr<Card> old_card = board._board[i][j]->get_card();
+
+			if (old_card)
+			{
+				std::shared_ptr<Card> new_card = card_map[old_card];
+				this->_board[i][j]->set_card(new_card);
+
+				new_card->set_square(this->_board[i][j]);
+			}
 		}
 	}
 }
