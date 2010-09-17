@@ -4,6 +4,7 @@ AC_PREREQ([2.67])
 AC_INIT([TripleTriad], [0.2.0_pre1])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE(1.11 foreign)
+AM_SILENT_RULES([yes])
 AC_CONFIG_SRCDIR([src/tripletriad.cc])
 AM_CONFIG_HEADER([config.h])
 
