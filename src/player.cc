@@ -34,7 +34,7 @@
 #define MIN(X, Y)  ((X) < (Y) ? (X) : (Y))
 #define MAX(X, Y)  ((X) > (Y) ? (X) : (Y))
 
-Player::Player(TripleTriad *game, GameBoard *gameBoard, Piece myPiece, Piece opponentPiece)
+Player::Player(GameBoard *gameBoard, Piece myPiece, Piece opponentPiece)
 {
 	this->_realGameBoard = gameBoard;
 	this->_gameBoard = NULL;
@@ -43,7 +43,6 @@ Player::Player(TripleTriad *game, GameBoard *gameBoard, Piece myPiece, Piece opp
 	this->_abortedPly = false;
 	this->_totalPly = 0;
 	this->_searchCount = 0;
-	this->_game = game;
 	
 	this->_pieceWeight = 0;
 	this->_mobilityWeight = 40;
@@ -178,7 +177,7 @@ int Player::minimaxSearch(int ply)
 
 	if (this->_positions % 50000 == 0)
 	{
-		if (this->_game->checkEvent(false) == true)
+		if (TripleTriad::get_instance()->checkEvent(false) == true)
 		{
 			this->_abortedPly = true;
 			return 0;

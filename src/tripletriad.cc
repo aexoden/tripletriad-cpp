@@ -29,6 +29,8 @@
 
 #include "tripletriad.hh"
 
+std::shared_ptr<TripleTriad> TripleTriad::_instance = std::shared_ptr<TripleTriad>();
+
 TripleTriad::TripleTriad()
 {
 	// Create the graphics surface.
@@ -64,10 +66,18 @@ TripleTriad::~TripleTriad()
 	delete this->_gameBoard;
 }
 
+std::shared_ptr<TripleTriad> TripleTriad::get_instance()
+{
+	if (!TripleTriad::_instance)
+		TripleTriad::_instance = std::shared_ptr<TripleTriad>(new TripleTriad());
+
+	return TripleTriad::_instance;
+}
+
 void TripleTriad::run()
 {
-	Player *firstPlayer = new Player(this, this->_gameBoard, PIECE_BLUE, PIECE_RED);
-	Player *secondPlayer = new Player(this, this->_gameBoard, PIECE_RED, PIECE_BLUE);
+	Player *firstPlayer = new Player(this->_gameBoard, PIECE_BLUE, PIECE_RED);
+	Player *secondPlayer = new Player(this->_gameBoard, PIECE_RED, PIECE_BLUE);
 
 	while (!this->_gameBoard->get_valid_moves().empty())
 	{
@@ -195,8 +205,8 @@ int main(int argc, char* argv[])
 		SDL_Quit();
 	}
 
-	TripleTriad *game = new TripleTriad();
-	game->run();
+	std::shared_ptr<TripleTriad> tripletriad = TripleTriad::get_instance();
+	tripletriad->run();
 
 	return 0;
 }

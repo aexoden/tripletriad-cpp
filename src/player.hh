@@ -23,6 +23,7 @@
 #ifndef TRIPLETRIAD_PLAYER_HH
 #define TRIPLETRIAD_PLAYER_HH
 
+
 #include "game_board.hh"
 #include "transposition_table.hh"
 
@@ -32,7 +33,7 @@ class Player
 {
 	public:
 		// Constructor for objects of type Player.
-		Player(TripleTriad *game, GameBoard *gameBoard, Piece myPiece, Piece opponentPiece);
+		Player(GameBoard *gameBoard, Piece myPiece, Piece opponentPiece);
 		~Player();
 
 		// Makes a move.
@@ -83,9 +84,6 @@ class Player
 		int _pMobilityWeight;
 		int _cornerWeight;
 		int _winWeight;
-
-		// Game
-		TripleTriad *_game;
 };
 
 #endif

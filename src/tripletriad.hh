@@ -23,6 +23,8 @@
 #ifndef TRIPLETRIAD_H
 #define TRIPLETRIAD_H
 
+#include <memory>
+
 #include "SDL.h"
 
 class GameBoard;
@@ -31,8 +33,9 @@ class TripleTriad
 {
 	public:
 		// Constructor
-		TripleTriad();
 		~TripleTriad();
+
+		static std::shared_ptr<TripleTriad> get_instance();
 
 		// Method to run the game.
 		void run();
@@ -41,6 +44,10 @@ class TripleTriad
 		bool checkEvent(bool moveHuman);
 
 	private:
+		TripleTriad();
+
+		static std::shared_ptr<TripleTriad> _instance;
+
 		// SDL Surface
 		SDL_Surface *_surface;
 
