@@ -40,7 +40,7 @@ Player::Player(std::shared_ptr<GameBoard> board, Piece my_piece, Piece opponent_
 
 std::shared_ptr<Move> Player::get_move()
 {
-	this->_test_board = std::shared_ptr<GameBoard>(new GameBoard(*(this->_board)));
+	this->_test_board = this->_board;
 
 	int best_score = std::numeric_limits<int>::min();
 	std::shared_ptr<Move> best_move;
@@ -58,7 +58,7 @@ std::shared_ptr<Move> Player::get_move()
 			this->_test_board->move(*iter);
 
 			complete = true;
-			int score = this->_search_minimax(ply - 1, complete, positions);
+			int score = this->_search_minimax(ply - 1, std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), complete, positions);
 
 			this->_test_board->unmove();
 
@@ -82,7 +82,7 @@ std::shared_ptr<Move> Player::get_move()
 	return best_move;
 }
 
-int Player::_search_minimax(int max_ply, bool & complete, int & positions)
+int Player::_search_minimax(int max_ply, int alpha, int beta, bool & complete, int & positions)
 {
 	if (positions % 1000 == 0)
 		TripleTriad::get_instance()->checkEvent(false);
@@ -95,40 +95,39 @@ int Player::_search_minimax(int max_ply, bool & complete, int & positions)
 	if (max_ply == 0 || moves.empty())
 		return this->_evaluate();
 
-	int best_score = std::numeric_limits<int>::min();
-
-	if (this->_test_board->get_current_piece() != this->_my_piece)
-		best_score = std::numeric_limits<int>::max();
-
 	for (auto iter = moves.begin(); iter != moves.end(); iter++)
 	{
 		this->_test_board->move(*iter);
-		int score = this->_search_minimax(max_ply - 1, complete, positions);
+		int score = this->_search_minimax(max_ply - 1, alpha, beta, complete, positions);
 		this->_test_board->unmove();
 
 		if (this->_test_board->get_current_piece() == this->_my_piece)
 		{
-			if (score > best_score)
-				best_score = score;
+			if (score >= beta)
+				return beta;
+
+			if (score > alpha)
+				alpha = score;
 		}
 		else
 		{
-			if (score < best_score)
-				best_score = score;
+			if (score <= alpha)
+				return alpha;
+
+			if (score < beta)
+				beta = score;
 		}
 
 		positions++;
 	}
 
-	return best_score;
+	if (this->_test_board->get_current_piece() == this->_my_piece)
+		return alpha;
+	else
+		return beta;
 }
 
 int Player::_evaluate()
 {
-	int score = this->_test_board->get_score(this->_my_piece) - this->_test_board->get_score(this->_opponent_piece);
-
-	if (this->_test_board->get_current_piece() == this->_my_piece)
-		return score;
-	else
-		return score * -1;
+	return this->_test_board->get_score(this->_my_piece) - this->_test_board->get_score(this->_opponent_piece);
 }

@@ -36,7 +36,7 @@ class Player
 		std::shared_ptr<Move> get_move();
 
 	private:
-		int _search_minimax(int max_ply, bool & complete, int & positions);
+		int _search_minimax(int max_ply, int alpha, int beta, bool & complete, int & positions);
 
 		int _evaluate();
 
