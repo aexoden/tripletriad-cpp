@@ -23,6 +23,7 @@
 #ifndef TRIPLETRIAD_GAME_BOARD_HH
 #define TRIPLETRIAD_GAME_BOARD_HH
 
+#include <list>
 #include <memory>
 #include <set>
 #include <stack>
@@ -51,7 +52,7 @@ class GameBoard
 
 		bool is_valid_move(std::shared_ptr<Move> move);
 
-		std::set<std::shared_ptr<Move>> get_valid_moves();
+		std::list<std::shared_ptr<Move>> get_valid_moves();
 
 		void render(SDL_Surface * surface);
 	private:

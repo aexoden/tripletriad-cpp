@@ -211,22 +211,39 @@ bool GameBoard::is_valid_move(std::shared_ptr<Move> move)
 	return (!square->get_card() && move->card->get_owner() == this->_current_piece);
 }
 
-std::set<std::shared_ptr<Move>> GameBoard::get_valid_moves()
+std::list<std::shared_ptr<Move>> GameBoard::get_valid_moves()
 {
-	std::set<std::shared_ptr<Move>> moves;
+	std::set<std::shared_ptr<Card>> cards = this->_cards;
+	std::list<std::shared_ptr<Move>> moves;
 
-	for (std::set<std::shared_ptr<Card>>::iterator iter = this->_cards.begin(); iter != this->_cards.end(); iter++)
+	while (!cards.empty())
 	{
-		if (!(*iter)->get_square() && (*iter)->get_owner() == this->_current_piece)
+		int best_score = 0;
+		std::shared_ptr<Card> best_card;
+
+		for (auto iter = cards.begin(); iter != cards.end(); iter++)
+		{
+			int score = (*iter)->top + (*iter)->left + (*iter)->right + (*iter)->bottom;
+
+			if (score > best_score)
+			{
+				best_score = score;
+				best_card = (*iter);
+			}
+		}
+
+		cards.erase(best_card);
+
+		if (!best_card->get_square() && best_card->get_owner() == this->_current_piece)
 		{
 			for (int row = 0; row < 3; row++)
 			{
 				for (int col = 0; col < 3; col++)
 				{
-					std::shared_ptr<Move> move(new Move(row, col, *iter));
+					std::shared_ptr<Move> move(new Move(row, col, best_card));
 
 					if (this->is_valid_move(move))
-						moves.insert(move);
+						moves.push_back(move);
 				}
 			}
 		}

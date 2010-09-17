@@ -23,6 +23,7 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <list>
 #include <set>
 
 #include "common.hh"
@@ -51,9 +52,9 @@ std::shared_ptr<Move> Player::get_move()
 	{
 		int positions = 0;
 
-		std::set<std::shared_ptr<Move>> moves = this->_test_board->get_valid_moves();
+		std::list<std::shared_ptr<Move>> moves  = this->_test_board->get_valid_moves();
 
-		for (std::set<std::shared_ptr<Move>>::iterator iter = moves.begin(); iter != moves.end(); iter++)
+		for (auto iter = moves.begin(); iter != moves.end(); iter++)
 		{
 			this->_test_board->move(*iter);
 
@@ -87,7 +88,7 @@ int Player::_search_minimax(int max_ply, int alpha, int beta, bool & complete, i
 	if (positions % 1000 == 0)
 		TripleTriad::get_instance()->checkEvent(false);
 
-	std::set<std::shared_ptr<Move>> moves = this->_test_board->get_valid_moves();
+	std::list<std::shared_ptr<Move>> moves = this->_test_board->get_valid_moves();
 
 	if (max_ply == 0 && !moves.empty())
 		complete = false;

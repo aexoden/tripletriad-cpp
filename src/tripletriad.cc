@@ -157,12 +157,11 @@ bool TripleTriad::checkEvent(bool getHumanCard)
 						int row = (event.button.y - 121) / 101;
 						int col = (event.button.x - 110) / 101;
 
-						std::set<std::shared_ptr<Move>> moves = this->_gameBoard->get_valid_moves();
+						std::list<std::shared_ptr<Move>> moves = this->_gameBoard->get_valid_moves();
 
-						std::set<std::shared_ptr<Move>>::iterator iter;
 						int index = 0;
 
-						for (iter = moves.begin(); iter != moves.end(); iter++)
+						for (auto iter = moves.begin(); iter != moves.end(); iter++)
 						{
 							if ((*iter)->row == row && (*iter)->col == col)
 							{
