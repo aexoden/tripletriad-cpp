@@ -1,3 +1,8 @@
 *.o
 *.swp
-src/tripletriad
+Makefile.in
+/aclocal.m4
+/autom4te.cache
+/config.h.in
+/configure
+/src/tripletriad
