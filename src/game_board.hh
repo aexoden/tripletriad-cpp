@@ -61,7 +61,7 @@ class GameBoard
 
 		std::set<std::shared_ptr<Card>> _cards;
 
-		std::vector<std::vector<std::shared_ptr<Square>>> _board;
+		std::vector<std::shared_ptr<Square>> _board;
 
 		std::stack<std::shared_ptr<Move>> _move_history;
 		std::stack<std::set<std::shared_ptr<Card>>> _card_history;

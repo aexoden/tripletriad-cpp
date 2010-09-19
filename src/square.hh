@@ -24,8 +24,17 @@
 #define TRIPLETRIAD_SQUARE_HH
 
 #include <memory>
+#include <vector>
 
 #include "common.hh"
+
+enum Direction
+{
+	NORTH,
+	SOUTH,
+	EAST,
+	WEST
+};
 
 class Card;
 
@@ -38,12 +47,18 @@ class Square
 		void set_card(std::shared_ptr<Card> card);
 
 		int get_elemental_adjustment() const;
+
+		const std::shared_ptr<const Square> get_neighbor(Direction direction);
+
+		static std::vector<std::shared_ptr<Square>> build_squares(int rows, int cols);
 		
 		const int row, col;
 		Element element;
 
 	private:
 		std::shared_ptr<Card> _card;
+
+		std::vector<std::shared_ptr<Square>> _neighbors;
 };
 
 #endif

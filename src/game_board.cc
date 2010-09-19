@@ -36,17 +36,10 @@ GameBoard::GameBoard(bool same, bool plus, bool same_wall, bool elemental, Piece
 	_same_wall(same_wall),
 	_elemental(elemental),
 	_cards(cards),
-	_board(3, std::vector<std::shared_ptr<Square>>(3)),
 	_move_history(),
 	_card_history()
 {
-	for (int i = 0; i < 3; i++)
-	{
-		for (int j = 0; j < 3; j++)
-		{
-			this->_board[i][j] = std::shared_ptr<Square>(new Square(i, j, ELEMENT_NONE));
-		}
-	}
+	this->_board = Square::build_squares(3, 3);
 }
 
 GameBoard::GameBoard(const GameBoard & board) :
@@ -56,7 +49,6 @@ GameBoard::GameBoard(const GameBoard & board) :
 	_same_wall(board._same_wall),
 	_elemental(board._elemental),
 	_cards(),
-	_board(3, std::vector<std::shared_ptr<Square>>(3)),
 	_move_history(),
 	_card_history()
 {
@@ -71,19 +63,20 @@ GameBoard::GameBoard(const GameBoard & board) :
 		this->_cards.insert(card);
 	}
 
-	for (int i = 0; i < 3; i++)
+	this->_board = Square::build_squares(3, 3);
+
+	for (int row = 0; row < 3; row++)
 	{
-		for (int j = 0; j < 3; j++)
+		for (int col = 0; col < 3; col++)
 		{
-			this->_board[i][j] = std::shared_ptr<Square>(new Square(*(board._board[i][j])));
-			std::shared_ptr<Card> old_card = board._board[i][j]->get_card();
+			std::shared_ptr<Card> old_card = board._board[row * 3 + col]->get_card();
 
 			if (old_card)
 			{
 				std::shared_ptr<Card> new_card = card_map[old_card];
-				this->_board[i][j]->set_card(new_card);
+				this->_board[row * 3 + col]->set_card(new_card);
 
-				new_card->set_square(this->_board[i][j]);
+				new_card->set_square(this->_board[row * 3 + col]);
 			}
 		}
 	}
@@ -99,16 +92,17 @@ void GameBoard::move(std::shared_ptr<Move> move)
 
 	// TODO: Elemental is assumed to always be on at the moment. Since the board won't have any elementals if the
 	// elemental rule is disabled, this doesn't matter practically, but it makes the elemental rule parameter useless.
-	std::shared_ptr<Square> square = this->_board[move->row][move->col];
+	std::shared_ptr<Square> square = this->_board[move->row * 3 + move->col];
 
 	std::set<std::shared_ptr<Card>> flipped_cards;
 
 	square->set_card(move->card);
 	move->card->set_square(square);
 
-	if (move->col > 0)
+	std::shared_ptr<const Square> target_square;
+
+	if (target_square = square->get_neighbor(WEST))
 	{
-		std::shared_ptr<Square> target_square = this->_board[move->row][move->col - 1];
 		std::shared_ptr<Card> target_card = target_square->get_card();
 
 		if (target_card && target_card->get_owner() != this->_current_piece &&
@@ -119,9 +113,8 @@ void GameBoard::move(std::shared_ptr<Move> move)
 		}
 	}
 
-	if (move->col < 2)
+	if (target_square = square->get_neighbor(EAST))
 	{
-		std::shared_ptr<Square> target_square = this->_board[move->row][move->col + 1];
 		std::shared_ptr<Card> target_card = target_square->get_card();
 
 		if (target_card && target_card->get_owner() != this->_current_piece &&
@@ -132,9 +125,8 @@ void GameBoard::move(std::shared_ptr<Move> move)
 		}
 	}
 
-	if (move->row > 0)
+	if (target_square = square->get_neighbor(NORTH))
 	{
-		std::shared_ptr<Square> target_square = this->_board[move->row - 1][move->col];
 		std::shared_ptr<Card> target_card = target_square->get_card();
 
 		if (target_card && target_card->get_owner() != this->_current_piece &&
@@ -145,9 +137,8 @@ void GameBoard::move(std::shared_ptr<Move> move)
 		}
 	}
 
-	if (move->row < 2)
+	if (target_square = square->get_neighbor(SOUTH))
 	{
-		std::shared_ptr<Square> target_square = this->_board[move->row + 1][move->col];
 		std::shared_ptr<Card> target_card = target_square->get_card();
 
 		if (target_card && target_card->get_owner() != this->_current_piece &&
@@ -175,8 +166,8 @@ void GameBoard::unmove()
 
 	std::shared_ptr<Move> move = this->_move_history.top();
 
-	this->_board[move->row][move->col]->get_card()->set_square(std::shared_ptr<Square>());
-	this->_board[move->row][move->col]->set_card(std::shared_ptr<Card>());
+	this->_board[move->row * 3 + move->col]->get_card()->set_square(std::shared_ptr<Square>());
+	this->_board[move->row * 3 + move->col]->set_card(std::shared_ptr<Card>());
 
 	this->_card_history.pop();
 	this->_move_history.pop();
@@ -206,7 +197,7 @@ int GameBoard::get_score(Piece piece)
 
 bool GameBoard::is_valid_move(std::shared_ptr<Move> move)
 {
-	std::shared_ptr<Square> square = this->_board[move->row][move->col];
+	std::shared_ptr<Square> square = this->_board[move->row * 3 + move->col];
 
 	return (!square->get_card() && move->card->get_owner() == this->_current_piece);
 }
@@ -274,7 +265,7 @@ void GameBoard::render(SDL_Surface * surface)
 			else
 				boxRGBA(surface, col_offset, row_offset, col_offset + 99, row_offset + 99, 64, 32, 0, 255);
 
-			switch (this->_board[row][col]->element)
+			switch (this->_board[row * 3 + col]->element)
 			{
 				case ELEMENT_NONE:
 					break;
@@ -287,7 +278,7 @@ void GameBoard::render(SDL_Surface * surface)
 					break;
 			}
 
-			std::shared_ptr<Card> card = this->_board[row][col]->get_card();
+			std::shared_ptr<Card> card = this->_board[row * 3 + col]->get_card();
 
 			if (card)
 			{
@@ -310,7 +301,7 @@ void GameBoard::render(SDL_Surface * surface)
 				card->render(surface, col_offset + 6, row_offset + 21);
 			}
 
-			switch (this->_board[row][col]->get_elemental_adjustment())
+			switch (this->_board[row * 3 + col]->get_elemental_adjustment())
 			{
 				case 1:
 					stringRGBA(surface, col_offset + 40, row_offset + 75, "+1", 255, 255, 255, 255);

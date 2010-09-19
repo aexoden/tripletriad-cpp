@@ -27,7 +27,8 @@ Square::Square(int row, int col, Element element) :
 	row(row),
 	col(col),
 	element(element),
-	_card()
+	_card(),
+	_neighbors(4)
 { }
 
 std::shared_ptr<Card> Square::get_card() const
@@ -51,4 +52,38 @@ int Square::get_elemental_adjustment() const
 	}
 
 	return 0;
+}
+
+const std::shared_ptr<const Square> Square::get_neighbor(Direction direction)
+{
+	return this->_neighbors[direction];
+}
+
+std::vector<std::shared_ptr<Square>> Square::build_squares(int rows, int cols)
+{
+	std::vector<std::shared_ptr<Square>> squares(rows * cols);
+
+	for (int row = 0; row < rows; row++)
+		for (int col = 0; col < cols; col++)
+			squares[row * cols + col] = std::make_shared<Square>(Square(row, col, ELEMENT_NONE));
+
+	for (int row = 0; row < rows; row++)
+	{
+		for (int col = 0; col < cols; col++)
+		{
+			if (col > 0)
+				squares[row * cols + col]->_neighbors[WEST] = squares[row * cols + col - 1];
+
+			if (row > 0)
+				squares[row * cols + col]->_neighbors[NORTH] = squares[(row - 1) * cols + col];
+
+			if (col < cols - 1)
+				squares[row * cols + col]->_neighbors[EAST] = squares[row * cols + col + 1];
+
+			if (row < rows - 1)
+				squares[row * cols + col]->_neighbors[SOUTH] = squares[(row + 1) * cols + col];
+		}
+	}
+
+	return squares;
 }
