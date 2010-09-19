@@ -24,17 +24,17 @@
 
 #include "card.hh"
 #include "move.hh"
+#include "square.hh"
 
-Move::Move(int row, int col, std::shared_ptr<Card> card) :
-	row(row),
-	col(col),
+Move::Move(std::shared_ptr<Square> square, std::shared_ptr<Card> card) :
+	square(square),
 	card(card)
 { }
 
 std::ostream & operator<<(std::ostream & stream, const Move & move)
 {
 	std::ostringstream oss;
-	oss << *(move.card) << " at (" << move.row << ", " << move.col << ")";
+	oss << *(move.card) << " at " << *(move.square);
 
 	return stream << oss.str();
 }

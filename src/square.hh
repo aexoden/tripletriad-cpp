@@ -24,6 +24,7 @@
 #define TRIPLETRIAD_SQUARE_HH
 
 #include <memory>
+#include <sstream>
 #include <vector>
 
 #include "common.hh"
@@ -51,6 +52,8 @@ class Square
 		const std::shared_ptr<const Square> get_neighbor(Direction direction);
 
 		static std::vector<std::shared_ptr<Square>> build_squares(int rows, int cols);
+
+		friend std::ostream & operator<<(std::ostream & stream, const Square & square);
 		
 		const int row, col;
 		Element element;

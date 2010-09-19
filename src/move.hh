@@ -27,17 +27,16 @@
 #include <memory>
 
 class Card;
+class Square;
 
 class Move
 {
 	public:
-		Move(int row, int col, std::shared_ptr<Card> card);
+		Move(std::shared_ptr<Square> square, std::shared_ptr<Card> card);
 
 		friend std::ostream & operator<<(std::ostream & stream, const Move & move);
 
-		const int row;
-		const int col;
-		
+		const std::shared_ptr<Square> square;
 		const std::shared_ptr<Card> card;
 };
 

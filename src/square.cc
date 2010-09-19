@@ -87,3 +87,11 @@ std::vector<std::shared_ptr<Square>> Square::build_squares(int rows, int cols)
 
 	return squares;
 }
+
+std::ostream & operator<<(std::ostream & stream, const Square & square)
+{
+	std::ostringstream oss;
+	oss << "(" << square.row << ", " << square.col << ")";
+
+	return stream << oss.str();
+}

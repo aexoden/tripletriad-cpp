@@ -27,6 +27,7 @@
 #include "game_board.hh"
 #include "move.hh"
 #include "player.hh"
+#include "square.hh"
 
 #include "tripletriad.hh"
 
@@ -163,7 +164,7 @@ bool TripleTriad::checkEvent(bool getHumanCard)
 
 						for (auto iter = moves.begin(); iter != moves.end(); iter++)
 						{
-							if ((*iter)->row == row && (*iter)->col == col)
+							if ((*iter)->square->row == row && (*iter)->square->col == col)
 							{
 								if (index == this->_cardChosen)
 								{

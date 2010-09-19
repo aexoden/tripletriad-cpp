@@ -92,57 +92,55 @@ void GameBoard::move(std::shared_ptr<Move> move)
 
 	// TODO: Elemental is assumed to always be on at the moment. Since the board won't have any elementals if the
 	// elemental rule is disabled, this doesn't matter practically, but it makes the elemental rule parameter useless.
-	std::shared_ptr<Square> square = this->_board[move->row * 3 + move->col];
-
 	std::set<std::shared_ptr<Card>> flipped_cards;
 
-	square->set_card(move->card);
-	move->card->set_square(square);
+	move->square->set_card(move->card);
+	move->card->set_square(move->square);
 
 	std::shared_ptr<const Square> target_square;
 
-	if (target_square = square->get_neighbor(WEST))
+	if (target_square = move->square->get_neighbor(WEST))
 	{
 		std::shared_ptr<Card> target_card = target_square->get_card();
 
 		if (target_card && target_card->get_owner() != this->_current_piece &&
-			move->card->left + square->get_elemental_adjustment() > target_card->right + target_square->get_elemental_adjustment())
+			move->card->left + move->square->get_elemental_adjustment() > target_card->right + target_square->get_elemental_adjustment())
 		{
 				target_card->set_owner(this->_current_piece);
 				flipped_cards.insert(target_card);
 		}
 	}
 
-	if (target_square = square->get_neighbor(EAST))
+	if (target_square = move->square->get_neighbor(EAST))
 	{
 		std::shared_ptr<Card> target_card = target_square->get_card();
 
 		if (target_card && target_card->get_owner() != this->_current_piece &&
-			move->card->right + square->get_elemental_adjustment() > target_card->left + target_square->get_elemental_adjustment())
+			move->card->right + move->square->get_elemental_adjustment() > target_card->left + target_square->get_elemental_adjustment())
 		{
 				target_card->set_owner(this->_current_piece);
 				flipped_cards.insert(target_card);
 		}
 	}
 
-	if (target_square = square->get_neighbor(NORTH))
+	if (target_square = move->square->get_neighbor(NORTH))
 	{
 		std::shared_ptr<Card> target_card = target_square->get_card();
 
 		if (target_card && target_card->get_owner() != this->_current_piece &&
-			move->card->top + square->get_elemental_adjustment() > target_card->bottom + target_square->get_elemental_adjustment())
+			move->card->top + move->square->get_elemental_adjustment() > target_card->bottom + target_square->get_elemental_adjustment())
 		{
 				target_card->set_owner(this->_current_piece);
 				flipped_cards.insert(target_card);
 		}
 	}
 
-	if (target_square = square->get_neighbor(SOUTH))
+	if (target_square = move->square->get_neighbor(SOUTH))
 	{
 		std::shared_ptr<Card> target_card = target_square->get_card();
 
 		if (target_card && target_card->get_owner() != this->_current_piece &&
-			move->card->bottom + square->get_elemental_adjustment() > target_card->top + target_square->get_elemental_adjustment())
+			move->card->bottom + move->square->get_elemental_adjustment() > target_card->top + target_square->get_elemental_adjustment())
 		{
 				target_card->set_owner(this->_current_piece);
 				flipped_cards.insert(target_card);
@@ -166,8 +164,8 @@ void GameBoard::unmove()
 
 	std::shared_ptr<Move> move = this->_move_history.top();
 
-	this->_board[move->row * 3 + move->col]->get_card()->set_square(std::shared_ptr<Square>());
-	this->_board[move->row * 3 + move->col]->set_card(std::shared_ptr<Card>());
+	move->square->get_card()->set_square(std::shared_ptr<Square>());
+	move->square->set_card(std::shared_ptr<Card>());
 
 	this->_card_history.pop();
 	this->_move_history.pop();
@@ -197,9 +195,7 @@ int GameBoard::get_score(Piece piece)
 
 bool GameBoard::is_valid_move(std::shared_ptr<Move> move)
 {
-	std::shared_ptr<Square> square = this->_board[move->row * 3 + move->col];
-
-	return (!square->get_card() && move->card->get_owner() == this->_current_piece);
+	return (!move->square->get_card() && move->card->get_owner() == this->_current_piece);
 }
 
 std::list<std::shared_ptr<Move>> GameBoard::get_valid_moves()
@@ -227,15 +223,12 @@ std::list<std::shared_ptr<Move>> GameBoard::get_valid_moves()
 
 		if (!best_card->get_square() && best_card->get_owner() == this->_current_piece)
 		{
-			for (int row = 0; row < 3; row++)
+			for (auto iter = this->_board.begin(); iter != this->_board.end(); iter++)
 			{
-				for (int col = 0; col < 3; col++)
-				{
-					std::shared_ptr<Move> move(new Move(row, col, best_card));
+				std::shared_ptr<Move> move(new Move(*iter, best_card));
 
-					if (this->is_valid_move(move))
-						moves.push_back(move);
-				}
+				if (this->is_valid_move(move))
+					moves.push_back(move);
 			}
 		}
 	}
@@ -260,7 +253,7 @@ void GameBoard::render(SDL_Surface * surface)
 			if (!this->_move_history.empty())
 				last_move = this->_move_history.top();
 
-			if (last_move && last_move->row == row && last_move->col == col)
+			if (last_move && last_move->square->row == row && last_move->square->col == col)
 				boxRGBA(surface, col_offset, row_offset, col_offset + 99, row_offset + 99, 128, 128, 128, 255);
 			else
 				boxRGBA(surface, col_offset, row_offset, col_offset + 99, row_offset + 99, 64, 32, 0, 255);
