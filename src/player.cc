@@ -43,7 +43,6 @@ std::shared_ptr<Move> Player::get_move()
 {
 	this->_test_board = this->_board;
 
-	int best_score = std::numeric_limits<int>::min();
 	std::shared_ptr<Move> best_move;
 
 	bool complete = false;
@@ -51,6 +50,7 @@ std::shared_ptr<Move> Player::get_move()
 	for (int ply = 1; !complete; ply++)
 	{
 		int positions = 0;
+		int best_score = std::numeric_limits<int>::min();
 
 		std::list<std::shared_ptr<Move>> moves  = this->_test_board->get_valid_moves();
 
