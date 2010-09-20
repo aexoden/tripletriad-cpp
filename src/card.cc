@@ -24,17 +24,15 @@
 
 #include "card.hh"
 
-Card::Card(Piece owner, int top, int bottom, int left, int right, Element element) :
+Card::Card(int top, int bottom, int left, int right, Element element) :
 	top(top),
 	bottom(bottom),
 	left(left),
 	right(right),
-	element(element),
-	_owner(owner),
-	_square()
+	element(element)
 { }
 
-void Card::render(SDL_Surface * surface, int col, int row) const
+void Card::render(SDL_Surface * surface, int x, int y) const
 {
 	char values[4];
 
@@ -43,10 +41,10 @@ void Card::render(SDL_Surface * surface, int col, int row) const
 	values[2] = (this->left   == 10) ? 'A' : this->left   + 48;
 	values[3] = (this->right  == 10) ? 'A' : this->right  + 48;
 				
-	characterRGBA(surface, col + 40, row + 5, values[0], 255, 255, 255, 255);
-	characterRGBA(surface, col + 40, row + 25, values[1], 255, 255, 255, 255);
-	characterRGBA(surface, col + 35, row + 15, values[2], 255, 255, 255, 255);
-	characterRGBA(surface, col + 45, row + 15, values[3], 255, 255, 255, 255);
+	characterRGBA(surface, x + 40, y + 5, values[0], 255, 255, 255, 255);
+	characterRGBA(surface, x + 40, y + 25, values[1], 255, 255, 255, 255);
+	characterRGBA(surface, x + 35, y + 15, values[2], 255, 255, 255, 255);
+	characterRGBA(surface, x + 45, y + 15, values[3], 255, 255, 255, 255);
 				
 	switch(this->element)
 	{
@@ -54,32 +52,12 @@ void Card::render(SDL_Surface * surface, int col, int row) const
 			break;
 
 		case ELEMENT_FIRE:
-			stringRGBA(surface, col + 5, row + 38, "Fire", 255, 255, 255, 255);
+			stringRGBA(surface, x + 5, y + 38, "Fire", 255, 255, 255, 255);
 			break;
 
 		default:
 			break;
 	}
-}
-
-Piece Card::get_owner() const
-{
-	return this->_owner;
-}
-
-void Card::set_owner(Piece owner)
-{
-	this->_owner = owner;
-}
-
-std::shared_ptr<Square> Card::get_square() const
-{
-	return this->_square;
-}
-
-void Card::set_square(std::shared_ptr<Square> square)
-{
-	this->_square = square;
 }
 
 std::ostream & operator<<(std::ostream & stream, const Card & card)

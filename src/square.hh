@@ -29,14 +29,6 @@
 
 #include "common.hh"
 
-enum Direction
-{
-	NORTH,
-	SOUTH,
-	EAST,
-	WEST
-};
-
 class Card;
 
 class Square
@@ -44,23 +36,16 @@ class Square
 	public:
 		Square(int row, int col, Element element);
 
-		std::shared_ptr<Card> get_card() const;
-		void set_card(std::shared_ptr<Card> card);
-
-		int get_elemental_adjustment() const;
-
-		const std::shared_ptr<const Square> get_neighbor(Direction direction);
+		std::shared_ptr<Square> get_neighbor(Direction direction) const;
 
 		static std::vector<std::shared_ptr<Square>> build_squares(int rows, int cols);
 
 		friend std::ostream & operator<<(std::ostream & stream, const Square & square);
 		
 		const int row, col;
-		Element element;
+		const Element element;
 
 	private:
-		std::shared_ptr<Card> _card;
-
 		std::vector<std::shared_ptr<Square>> _neighbors;
 };
 

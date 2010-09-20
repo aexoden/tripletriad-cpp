@@ -35,24 +35,14 @@ class Square;
 class Card
 {
 	public:
-		Card(Piece owner, int top, int bottom, int left, int right, Element element);
+		Card(int top, int bottom, int left, int right, Element element);
 
-		void render(SDL_Surface * surface, int col, int row) const;
-
-		Piece get_owner() const;
-		void set_owner(Piece owner);
-
-		std::shared_ptr<Square> get_square() const;
-		void set_square(std::shared_ptr<Square> square);
+		void render(SDL_Surface * surface, int x, int y) const;
 
 		friend std::ostream & operator<<(std::ostream & stream, const Card & card);
 
 		const int top, bottom, left, right;
 		const Element element;
-
-	private:
-		Piece _owner;
-		std::shared_ptr<Square> _square;
 };
 
 #endif

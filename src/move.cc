@@ -26,7 +26,7 @@
 #include "move.hh"
 #include "square.hh"
 
-Move::Move(std::shared_ptr<Square> square, std::shared_ptr<Card> card) :
+Move::Move(std::shared_ptr<Square> square, std::shared_ptr<const Card> card) :
 	square(square),
 	card(card)
 { }

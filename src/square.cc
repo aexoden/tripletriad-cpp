@@ -27,34 +27,10 @@ Square::Square(int row, int col, Element element) :
 	row(row),
 	col(col),
 	element(element),
-	_card(),
 	_neighbors(4)
 { }
 
-std::shared_ptr<Card> Square::get_card() const
-{
-	return this->_card;
-}
-
-void Square::set_card(std::shared_ptr<Card> card)
-{
-	this->_card = card;
-}
-
-int Square::get_elemental_adjustment() const
-{
-	if (this->_card && this->element != ELEMENT_NONE && this->_card->element != ELEMENT_NONE)
-	{
-		if (this->element == this->_card->element)
-			return 1;
-		else
-			return -1;
-	}
-
-	return 0;
-}
-
-const std::shared_ptr<const Square> Square::get_neighbor(Direction direction)
+std::shared_ptr<Square> Square::get_neighbor(Direction direction) const
 {
 	return this->_neighbors[direction];
 }

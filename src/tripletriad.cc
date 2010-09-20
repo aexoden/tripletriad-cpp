@@ -22,6 +22,7 @@
 
 #include <iostream>
 #include <list>
+#include <vector>
 
 #include "card.hh"
 #include "game_board.hh"
@@ -33,7 +34,8 @@
 
 std::shared_ptr<TripleTriad> TripleTriad::_instance = std::shared_ptr<TripleTriad>();
 
-TripleTriad::TripleTriad()
+TripleTriad::TripleTriad() :
+	cards(10)
 {
 	// Create the graphics surface.
 	this->_surface = SDL_SetVideoMode(524, 435, 0, SDL_ANYFORMAT);
@@ -43,20 +45,19 @@ TripleTriad::TripleTriad()
 		SDL_Quit();
 	}
 
-	std::set<std::shared_ptr<Card>> cards;
-
 	// Configure the cards.
-	cards.insert(std::shared_ptr<Card>(new Card(PIECE_RED, 9, 7, 3, 6, ELEMENT_NONE)));
-	cards.insert(std::shared_ptr<Card>(new Card(PIECE_RED, 1, 4, 1, 5, ELEMENT_NONE)));
-	cards.insert(std::shared_ptr<Card>(new Card(PIECE_RED, 3, 3, 6, 7, ELEMENT_NONE)));
-	cards.insert(std::shared_ptr<Card>(new Card(PIECE_RED, 3, 2, 1, 5, ELEMENT_NONE)));
-	cards.insert(std::shared_ptr<Card>(new Card(PIECE_RED, 5, 1, 3, 1, ELEMENT_NONE)));
+	cards[0] = std::shared_ptr<const Card>(new Card(6, 10, 4, 9, ELEMENT_NONE));
+	cards[1] = std::shared_ptr<const Card>(new Card(8, 10, 6, 5, ELEMENT_NONE));
+	cards[2] = std::shared_ptr<const Card>(new Card(9, 10, 2, 6, ELEMENT_NONE));
+	cards[3] = std::shared_ptr<const Card>(new Card(5, 8, 2, 10, ELEMENT_NONE));
+	cards[4] = std::shared_ptr<const Card>(new Card(9, 2, 8, 6, ELEMENT_NONE));	
+
+	cards[5] = std::shared_ptr<const Card>(new Card(9, 7, 3, 6, ELEMENT_NONE));
+	cards[6] = std::shared_ptr<const Card>(new Card(1, 4, 1, 5, ELEMENT_NONE));
+	cards[7] = std::shared_ptr<const Card>(new Card(3, 3, 6, 7, ELEMENT_NONE));
+	cards[8] = std::shared_ptr<const Card>(new Card(3, 2, 1, 5, ELEMENT_NONE));
+	cards[9] = std::shared_ptr<const Card>(new Card(5, 1, 3, 1, ELEMENT_NONE));
 	
-	cards.insert(std::shared_ptr<Card>(new Card(PIECE_BLUE, 6, 10, 4, 9, ELEMENT_NONE)));
-	cards.insert(std::shared_ptr<Card>(new Card(PIECE_BLUE, 8, 10, 6, 5, ELEMENT_NONE)));
-	cards.insert(std::shared_ptr<Card>(new Card(PIECE_BLUE, 9, 10, 2, 6, ELEMENT_NONE)));
-	cards.insert(std::shared_ptr<Card>(new Card(PIECE_BLUE, 5, 8, 2, 10, ELEMENT_NONE)));
-	cards.insert(std::shared_ptr<Card>(new Card(PIECE_BLUE, 9, 2, 8, 6, ELEMENT_NONE)));	
 	
 	// Configure the game board and its rules.
 	// GameBoard(start_piece, blue_cards, red_cards, same, plus, same wall, elemental)
@@ -149,6 +150,7 @@ bool TripleTriad::checkEvent(bool getHumanCard)
 						if ((event.button.x >= 10 && event.button.x < 100) || (event.button.x >= 414 && event.button.x < 514))
 						{
 							this->_cardChosen = (event.button.y - 10) / 80;
+							std::cout << "Player chose card: " << this->_cardChosen << std::endl;
 							getHumanCard = false;
 							getHumanDestination = true;
 						}
@@ -158,23 +160,19 @@ bool TripleTriad::checkEvent(bool getHumanCard)
 						int row = (event.button.y - 121) / 101;
 						int col = (event.button.x - 110) / 101;
 
-						std::list<std::shared_ptr<Move>> moves = this->_gameBoard->get_valid_moves();
+						std::cout << "Player chose: " << row << ", " << col << std::endl;
 
-						int index = 0;
+						std::shared_ptr<Move> move = this->_gameBoard->get_move(cards[this->_cardChosen + 5], row, col);
 
-						for (auto iter = moves.begin(); iter != moves.end(); iter++)
+						if (!move)
 						{
-							if ((*iter)->square->row == row && (*iter)->square->col == col)
-							{
-								if (index == this->_cardChosen)
-								{
-									this->_gameBoard->move((*iter));
-									getHumanDestination = false;
-									break;
-								}
-								else
-									index++;
-							}
+							getHumanDestination = false;
+							getHumanCard = true;
+						}
+						else
+						{
+							this->_gameBoard->move(move);
+							getHumanDestination = false;
 						}
 					}
 					break;

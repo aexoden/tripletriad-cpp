@@ -56,6 +56,7 @@ class TripleTriad
 		
 		// Input data
 		int _cardChosen;
+		std::vector<std::shared_ptr<const Card>> cards;
 };
 
 #endif

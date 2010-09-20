@@ -25,18 +25,24 @@
 
 #define VERSION "0.2.0_pre0"
 
+enum Direction
+{
+	NORTH,
+	SOUTH,
+	EAST,
+	WEST
+};
+
 enum Element
 {
-	ELEMENT_NONE = 0,
-	ELEMENT_FIRE = 1
+	ELEMENT_NONE,
+	ELEMENT_FIRE
 };
 
 enum Piece
 {
-	PIECE_NONE    = 0,
-	PIECE_RED     = 1,
-	PIECE_BLUE    = 2,
-	PIECE_INVALID = 3
+	PIECE_RED,
+	PIECE_BLUE
 };
 		
 #endif
