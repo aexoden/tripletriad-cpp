@@ -46,17 +46,17 @@ TripleTriad::TripleTriad() :
 	}
 
 	// Configure the cards.
-	cards[0] = std::shared_ptr<const Card>(new Card(6, 10, 4, 9, ELEMENT_NONE)); // 29
-	cards[1] = std::shared_ptr<const Card>(new Card(4, 2, 10, 10, ELEMENT_NONE)); // 27
-	cards[2] = std::shared_ptr<const Card>(new Card(8, 10, 6, 5, ELEMENT_NONE)); // 29
-	cards[3] = std::shared_ptr<const Card>(new Card(9, 10, 2, 6, ELEMENT_NONE)); // 25
-	cards[4] = std::shared_ptr<const Card>(new Card(6, 6, 10, 7, ELEMENT_NONE)); // 25
+	cards[0] = new Card(6, 10, 4, 9, ELEMENT_NONE); // 29
+	cards[1] = new Card(4, 2, 10, 10, ELEMENT_NONE); // 27
+	cards[2] = new Card(8, 10, 6, 5, ELEMENT_NONE); // 29
+	cards[3] = new Card(9, 10, 2, 6, ELEMENT_NONE); // 25
+	cards[4] = new Card(6, 6, 10, 7, ELEMENT_NONE); // 25
 
-	cards[5] = std::shared_ptr<const Card>(new Card(9, 2, 8, 6, ELEMENT_NONE)); // 25
-	cards[6] = std::shared_ptr<const Card>(new Card(5, 7, 4, 5, ELEMENT_NONE)); // 19
-	cards[7] = std::shared_ptr<const Card>(new Card(5, 2, 5, 3, ELEMENT_NONE)); // 11
-	cards[8] = std::shared_ptr<const Card>(new Card(8, 8, 2, 2, ELEMENT_NONE)); // 11
-	cards[9] = std::shared_ptr<const Card>(new Card(7, 4, 4, 4, ELEMENT_NONE)); // 10
+	cards[5] = new Card(9, 2, 8, 6, ELEMENT_NONE); // 25
+	cards[6] = new Card(5, 7, 4, 5, ELEMENT_NONE); // 19
+	cards[7] = new Card(5, 2, 5, 3, ELEMENT_NONE); // 11
+	cards[8] = new Card(8, 8, 2, 2, ELEMENT_NONE); // 11
+	cards[9] = new Card(7, 4, 4, 4, ELEMENT_NONE); // 10
 	
 	
 	// Configure the game board and its rules.

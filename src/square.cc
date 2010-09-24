@@ -33,18 +33,18 @@ Square::Square(int row, int col, Element element) :
 	_neighbors(4)
 { }
 
-std::shared_ptr<Square> Square::get_neighbor(Direction direction) const
+const Square * Square::get_neighbor(Direction direction) const
 {
 	return this->_neighbors[direction];
 }
 
-std::vector<std::shared_ptr<Square>> Square::build_squares(int rows, int cols)
+std::vector<const Square *> Square::build_squares(int rows, int cols)
 {
-	std::vector<std::shared_ptr<Square>> squares(rows * cols);
+	std::vector<Square *> squares(rows * cols);
 
 	for (int row = 0; row < rows; row++)
 		for (int col = 0; col < cols; col++)
-			squares[row * cols + col] = std::make_shared<Square>(Square(row, col, ELEMENT_NONE));
+			squares[row * cols + col] = new Square(row, col, ELEMENT_NONE);
 
 	for (int row = 0; row < rows; row++)
 	{
@@ -64,7 +64,12 @@ std::vector<std::shared_ptr<Square>> Square::build_squares(int rows, int cols)
 		}
 	}
 
-	return squares;
+	std::vector<const Square *> const_squares;
+
+	for (auto iter = squares.begin(); iter != squares.end(); iter++)
+		const_squares.push_back(*iter);
+
+	return const_squares;
 }
 
 std::ostream & operator<<(std::ostream & stream, const Square & square)

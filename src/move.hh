@@ -32,12 +32,12 @@ class Square;
 class Move
 {
 	public:
-		Move(std::shared_ptr<Square> square, std::shared_ptr<const Card> card);
+		Move(const Square * square, const Card * card);
 
 		friend std::ostream & operator<<(std::ostream & stream, const Move & move);
 
-		const std::shared_ptr<Square> square;
-		const std::shared_ptr<const Card> card;
+		const Square * const square;
+		const Card * const card;
 
 		const int id;
 

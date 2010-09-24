@@ -20,10 +20,10 @@
  * SOFTWARE.
  */
 
-#ifndef TRANSPOSITIONTABLE_H
-#define TRANSPOSITIONTABLE_H
+#ifndef TRIPLETRIAD_TRANSPOSITION_TABLE_HH
+#define TRIPLETRIAD_TRANSPOSITION_TABLE_HH
 
-#include "move.hh"
+class Move;
 
 class TranspositionTable
 {

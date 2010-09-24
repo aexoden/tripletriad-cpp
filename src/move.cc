@@ -22,13 +22,15 @@
 
 #include <sstream>
 
+#include <iostream>
+
 #include "card.hh"
 #include "move.hh"
 #include "square.hh"
 
 int Move::_next_id = 0;
 
-Move::Move(std::shared_ptr<Square> square, std::shared_ptr<const Card> card) :
+Move::Move(const Square * square, const Card * card) :
 	square(square),
 	card(card),
 	id(Move::_next_id++)

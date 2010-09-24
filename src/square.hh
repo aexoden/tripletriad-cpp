@@ -36,9 +36,9 @@ class Square
 	public:
 		Square(int row, int col, Element element);
 
-		std::shared_ptr<Square> get_neighbor(Direction direction) const;
+		const Square * get_neighbor(Direction direction) const;
 
-		static std::vector<std::shared_ptr<Square>> build_squares(int rows, int cols);
+		static std::vector<const Square *> build_squares(int rows, int cols);
 
 		friend std::ostream & operator<<(std::ostream & stream, const Square & square);
 		
@@ -48,7 +48,7 @@ class Square
 		const int id;
 
 	private:
-		std::vector<std::shared_ptr<Square>> _neighbors;
+		std::vector<const Square *> _neighbors;
 		
 		static int _next_id;
 };

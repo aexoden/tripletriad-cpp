@@ -29,7 +29,7 @@
 #include "move.hh"
 #include "square.hh"
 
-GameBoard::GameBoard(bool same, bool plus, bool same_wall, bool elemental, Piece first_piece, std::vector<std::shared_ptr<const Card>> cards) :
+GameBoard::GameBoard(bool same, bool plus, bool same_wall, bool elemental, Piece first_piece, std::vector<const Card *> cards) :
 	_current_piece(first_piece),
 	_same(same),
 	_plus(plus),
@@ -104,13 +104,13 @@ void GameBoard::unmove()
 	const Move * move = this->_move_history.top();
 	this->_move_history.pop();
 
-	for (std::shared_ptr<const Card> card = this->_card_history.top(); card != move->card; card = this->_card_history.top())
+	for (const Card * card = this->_card_history.top(); card != move->card; card = this->_card_history.top())
 	{
 		this->_owners[card->id] = this->_owners[card->id] == PIECE_BLUE ? PIECE_RED : PIECE_BLUE;
 		this->_card_history.pop();
 	}
 
-	this->_squares_to_cards[move->square->id] = std::shared_ptr<const Card>();
+	this->_squares_to_cards[move->square->id] = NULL;
 	this->_played_cards[move->card->id] = false;
 
 	this->_card_history.pop();
@@ -144,15 +144,17 @@ bool GameBoard::is_valid_move(const Move * move)
 std::list<const Move *> GameBoard::get_valid_moves()
 {
 	std::list<const Move *> moves;
-
+	
 	for (auto card = this->_cards.begin(); card != this->_cards.end(); card++)
 	{
-		if (!this->_played_cards[(*card)->id] && this->_owners[(*card)->id] == this->_current_piece)
+		if (this->_owners[(*card)->id] == this->_current_piece && !this->_played_cards[(*card)->id])
 		{
 			for (auto square = this->_squares.begin(); square != this->_squares.end(); square++)
 			{
 				if (!this->_squares_to_cards[(*square)->id])
+				{
 					moves.push_back(this->_moves[(*card)->id * 9 + (*square)->id]);
+				}
 			}
 		}
 	}
@@ -160,9 +162,9 @@ std::list<const Move *> GameBoard::get_valid_moves()
 	return moves;
 }
 
-const Move * GameBoard::get_move(std::shared_ptr<const Card> card, int row, int col)
+const Move * GameBoard::get_move(const Card * card, int row, int col)
 {
-	std::shared_ptr<Square> square = this->_squares[row * 3 + col];
+	const Square * square = this->_squares[row * 3 + col];
 
 	return this->_moves[card->id * 9 + square->id];
 }
@@ -202,7 +204,7 @@ void GameBoard::render(SDL_Surface * surface)
 					break;
 			}
 
-			std::shared_ptr<const Card> card = this->_squares_to_cards[this->_squares[row * 3 + col]->id];
+			const Card * card = this->_squares_to_cards[this->_squares[row * 3 + col]->id];
 
 			if (card)
 			{
@@ -278,15 +280,15 @@ void GameBoard::render(SDL_Surface * surface)
 	}
 }
 
-void GameBoard::_execute_flip(std::shared_ptr<Square> square, Direction direction)
+void GameBoard::_execute_flip(const Square * square, Direction direction)
 {
-	std::shared_ptr<Square> target = square->get_neighbor(direction);
+	const Square * target = square->get_neighbor(direction);
 
 	if (!target)
 		return;
 
-	std::shared_ptr<const Card> card = this->_squares_to_cards[square->id];
-	std::shared_ptr<const Card> target_card = this->_squares_to_cards[target->id];
+	const Card * card = this->_squares_to_cards[square->id];
+	const Card * target_card = this->_squares_to_cards[target->id];
 
 	if (!target_card)
 		return;
