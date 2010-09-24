@@ -26,9 +26,12 @@
 #include "move.hh"
 #include "square.hh"
 
+int Move::_next_id = 0;
+
 Move::Move(std::shared_ptr<Square> square, std::shared_ptr<const Card> card) :
 	square(square),
-	card(card)
+	card(card),
+	id(Move::_next_id++)
 { }
 
 std::ostream & operator<<(std::ostream & stream, const Move & move)

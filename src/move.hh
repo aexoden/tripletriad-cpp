@@ -38,6 +38,11 @@ class Move
 
 		const std::shared_ptr<Square> square;
 		const std::shared_ptr<const Card> card;
+
+		const int id;
+
+	private:
+		static int _next_id;
 };
 
 #endif
