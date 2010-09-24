@@ -24,9 +24,7 @@
 #define TRIPLETRIAD_GAME_BOARD_HH
 
 #include <list>
-#include <map>
 #include <memory>
-#include <set>
 #include <stack>
 #include <vector>
 
