@@ -33,7 +33,7 @@ class Player
 		Player(std::shared_ptr<GameBoard> board, Piece my_piece, Piece opponent_piece);
 		~Player();
 
-		std::shared_ptr<Move> get_move();
+		const Move * get_move();
 
 	private:
 		int _search_minimax(int max_ply, int alpha, int beta, bool & complete, int & positions);

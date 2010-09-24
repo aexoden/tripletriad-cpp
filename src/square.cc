@@ -23,10 +23,13 @@
 #include "card.hh"
 #include "square.hh"
 
+int Square::_next_id = 0;
+
 Square::Square(int row, int col, Element element) :
 	row(row),
 	col(col),
 	element(element),
+	id(Square::_next_id++),
 	_neighbors(4)
 { }
 

@@ -39,11 +39,11 @@ Player::Player(std::shared_ptr<GameBoard> board, Piece my_piece, Piece opponent_
 	_opponent_piece(opponent_piece)
 { }
 
-std::shared_ptr<Move> Player::get_move()
+const Move * Player::get_move()
 {
 	this->_test_board = this->_board;
 
-	std::shared_ptr<Move> best_move;
+	const Move * best_move = NULL;
 
 	bool complete = false;
 
@@ -52,7 +52,7 @@ std::shared_ptr<Move> Player::get_move()
 		int positions = 0;
 		int best_score = std::numeric_limits<int>::min();
 
-		std::list<std::shared_ptr<Move>> moves  = this->_test_board->get_valid_moves();
+		std::list<const Move *> moves  = this->_test_board->get_valid_moves();
 
 		for (auto iter = moves.begin(); iter != moves.end(); iter++)
 		{
@@ -88,7 +88,7 @@ int Player::_search_minimax(int max_ply, int alpha, int beta, bool & complete, i
 	if (positions % 1000 == 0)
 		TripleTriad::get_instance()->checkEvent(false);
 
-	std::list<std::shared_ptr<Move>> moves = this->_test_board->get_valid_moves();
+	std::list<const Move *> moves = this->_test_board->get_valid_moves();
 
 	if (max_ply == 0 && !moves.empty())
 		complete = false;

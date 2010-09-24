@@ -24,12 +24,15 @@
 
 #include "card.hh"
 
+int Card::_next_id = 0;
+
 Card::Card(int top, int bottom, int left, int right, Element element) :
 	top(top),
 	bottom(bottom),
 	left(left),
 	right(right),
-	element(element)
+	element(element),
+	id(Card::_next_id++)
 { }
 
 void Card::render(SDL_Surface * surface, int x, int y) const

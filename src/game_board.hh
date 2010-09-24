@@ -44,18 +44,18 @@ class GameBoard
 		GameBoard(bool same, bool plus, bool same_wall, bool elemental, Piece first_piece, std::vector<std::shared_ptr<const Card>> cards);
 		GameBoard(const GameBoard & board);
 
-		void move(std::shared_ptr<Move> move);
+		void move(const Move * move);
 		void unmove();
 
 		Piece get_current_piece();
 
 		int get_score(Piece piece);
 
-		bool is_valid_move(std::shared_ptr<Move> move);
+		bool is_valid_move(const Move * move);
 
-		std::list<std::shared_ptr<Move>> get_valid_moves();
+		std::list<const Move *> get_valid_moves();
 
-		std::shared_ptr<Move> get_move(std::shared_ptr<const Card> card, int row, int col);
+		const Move * get_move(std::shared_ptr<const Card> card, int row, int col);
 
 		void render(SDL_Surface * surface);
 	private:
@@ -67,11 +67,13 @@ class GameBoard
 		std::vector<std::shared_ptr<const Card>> _cards;
 		std::vector<std::shared_ptr<Square>> _squares;
 
-		std::map<std::shared_ptr<Square>, std::shared_ptr<const Card>> _squares_to_cards;
-		std::map<std::shared_ptr<const Card>, Piece> _owners;
+		std::vector<const Move *> _moves;
+
+		std::vector<std::shared_ptr<const Card>> _squares_to_cards;
+		std::vector<Piece> _owners;
 		std::set<std::shared_ptr<const Card>> _played_cards;
 
-		std::stack<std::shared_ptr<Move>> _move_history;
+		std::stack<const Move *> _move_history;
 		std::stack<std::shared_ptr<const Card>> _card_history;
 };
 

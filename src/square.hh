@@ -45,8 +45,12 @@ class Square
 		const int row, col;
 		const Element element;
 
+		const int id;
+
 	private:
 		std::vector<std::shared_ptr<Square>> _neighbors;
+		
+		static int _next_id;
 };
 
 #endif

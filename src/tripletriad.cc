@@ -46,22 +46,22 @@ TripleTriad::TripleTriad() :
 	}
 
 	// Configure the cards.
-	cards[0] = std::shared_ptr<const Card>(new Card(6, 10, 4, 9, ELEMENT_NONE));
-	cards[1] = std::shared_ptr<const Card>(new Card(8, 10, 6, 5, ELEMENT_NONE));
-	cards[2] = std::shared_ptr<const Card>(new Card(9, 10, 2, 6, ELEMENT_NONE));
-	cards[3] = std::shared_ptr<const Card>(new Card(5, 8, 2, 10, ELEMENT_NONE));
-	cards[4] = std::shared_ptr<const Card>(new Card(9, 2, 8, 6, ELEMENT_NONE));	
+	cards[0] = std::shared_ptr<const Card>(new Card(6, 10, 4, 9, ELEMENT_NONE)); // 29
+	cards[1] = std::shared_ptr<const Card>(new Card(4, 2, 10, 10, ELEMENT_NONE)); // 27
+	cards[2] = std::shared_ptr<const Card>(new Card(8, 10, 6, 5, ELEMENT_NONE)); // 29
+	cards[3] = std::shared_ptr<const Card>(new Card(9, 10, 2, 6, ELEMENT_NONE)); // 25
+	cards[4] = std::shared_ptr<const Card>(new Card(6, 6, 10, 7, ELEMENT_NONE)); // 25
 
-	cards[5] = std::shared_ptr<const Card>(new Card(9, 7, 3, 6, ELEMENT_NONE));
-	cards[6] = std::shared_ptr<const Card>(new Card(1, 4, 1, 5, ELEMENT_NONE));
-	cards[7] = std::shared_ptr<const Card>(new Card(3, 3, 6, 7, ELEMENT_NONE));
-	cards[8] = std::shared_ptr<const Card>(new Card(3, 2, 1, 5, ELEMENT_NONE));
-	cards[9] = std::shared_ptr<const Card>(new Card(5, 1, 3, 1, ELEMENT_NONE));
+	cards[5] = std::shared_ptr<const Card>(new Card(9, 2, 8, 6, ELEMENT_NONE)); // 25
+	cards[6] = std::shared_ptr<const Card>(new Card(5, 7, 4, 5, ELEMENT_NONE)); // 19
+	cards[7] = std::shared_ptr<const Card>(new Card(5, 2, 5, 3, ELEMENT_NONE)); // 11
+	cards[8] = std::shared_ptr<const Card>(new Card(8, 8, 2, 2, ELEMENT_NONE)); // 11
+	cards[9] = std::shared_ptr<const Card>(new Card(7, 4, 4, 4, ELEMENT_NONE)); // 10
 	
 	
 	// Configure the game board and its rules.
 	// GameBoard(start_piece, blue_cards, red_cards, same, plus, same wall, elemental)
-	this->_gameBoard = new GameBoard(false, false, false, false, PIECE_RED, cards);
+	this->_gameBoard = new GameBoard(false, false, false, false, PIECE_BLUE, cards);
 }
 
 TripleTriad::~TripleTriad()
@@ -80,7 +80,9 @@ std::shared_ptr<TripleTriad> TripleTriad::get_instance()
 void TripleTriad::run()
 {
 	Player *firstPlayer = new Player(std::shared_ptr<GameBoard>(this->_gameBoard), PIECE_BLUE, PIECE_RED);
-//	Player *secondPlayer = new Player(this->_gameBoard, PIECE_RED, PIECE_BLUE);
+	Player *secondPlayer = new Player(std::shared_ptr<GameBoard>(this->_gameBoard), PIECE_RED, PIECE_BLUE);
+
+	bool human = false;
 
 	while (!this->_gameBoard->get_valid_moves().empty())
 	{
@@ -89,7 +91,15 @@ void TripleTriad::run()
 		if (this->_gameBoard->get_current_piece() == PIECE_BLUE)
 		{
 			unsigned int start = SDL_GetTicks();
-			std::shared_ptr<Move> move = firstPlayer->get_move();
+			const Move * move = firstPlayer->get_move();
+			this->_gameBoard->move(move);
+
+			std::cout << "Time taken: " << ((SDL_GetTicks() - start) / 1000.0) << "s" << std::endl;
+		}
+		else if (!human)
+		{
+			unsigned int start = SDL_GetTicks();
+			const Move * move = secondPlayer->get_move();
 			this->_gameBoard->move(move);
 
 			std::cout << "Time taken: " << ((SDL_GetTicks() - start) / 1000.0) << "s" << std::endl;
@@ -111,13 +121,13 @@ void TripleTriad::run()
 
 	// Loop until the user exits.
 	this->_gameBoard->render(this->_surface);
-	SDL_Flip(this->_surface);
+/*	SDL_Flip(this->_surface);
 	while (true)
 	{
 		this->checkEvent(true);
-	}
+	}*/
 
-	delete firstPlayer;
+//	delete firstPlayer;
 //	delete secondPlayer;
 }
 
@@ -162,7 +172,7 @@ bool TripleTriad::checkEvent(bool getHumanCard)
 
 						std::cout << "Player chose: " << row << ", " << col << std::endl;
 
-						std::shared_ptr<Move> move = this->_gameBoard->get_move(cards[this->_cardChosen + 5], row, col);
+						const Move * move = this->_gameBoard->get_move(cards[this->_cardChosen + 5], row, col);
 
 						if (!move)
 						{

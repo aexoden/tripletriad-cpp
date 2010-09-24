@@ -43,6 +43,11 @@ class Card
 
 		const int top, bottom, left, right;
 		const Element element;
+
+		const int id;
+
+	private:
+		static int _next_id;
 };
 
 #endif
