@@ -71,7 +71,7 @@ class GameBoard
 
 		std::vector<std::shared_ptr<const Card>> _squares_to_cards;
 		std::vector<Piece> _owners;
-		std::set<std::shared_ptr<const Card>> _played_cards;
+		std::vector<bool> _played_cards;
 
 		std::stack<const Move *> _move_history;
 		std::stack<std::shared_ptr<const Card>> _card_history;

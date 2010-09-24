@@ -39,7 +39,7 @@ GameBoard::GameBoard(bool same, bool plus, bool same_wall, bool elemental, Piece
 	_moves(9 * 10),
 	_squares_to_cards(9),
 	_owners(10),
-	_played_cards(),
+	_played_cards(10, false),
 	_move_history(),
 	_card_history()
 {
@@ -86,7 +86,7 @@ void GameBoard::move(const Move * const move)
 	}
 
 	this->_squares_to_cards[move->square->id] = move->card;
-	this->_played_cards.insert(move->card);
+	this->_played_cards[move->card->id] = true;
 	this->_card_history.push(move->card);
 	
 	this->_execute_flip(move->square, NORTH);
@@ -111,7 +111,7 @@ void GameBoard::unmove()
 	}
 
 	this->_squares_to_cards[move->square->id] = std::shared_ptr<const Card>();
-	this->_played_cards.erase(move->card);
+	this->_played_cards[move->card->id] = false;
 
 	this->_card_history.pop();
 
@@ -147,7 +147,7 @@ std::list<const Move *> GameBoard::get_valid_moves()
 
 	for (auto card = this->_cards.begin(); card != this->_cards.end(); card++)
 	{
-		if (this->_played_cards.count(*card) == 0 && this->_owners[(*card)->id] == this->_current_piece)
+		if (!this->_played_cards[(*card)->id] && this->_owners[(*card)->id] == this->_current_piece)
 		{
 			for (auto square = this->_squares.begin(); square != this->_squares.end(); square++)
 			{
@@ -247,7 +247,7 @@ void GameBoard::render(SDL_Surface * surface)
 
 	for (int i = 0; i < 10; i++)
 	{
-		if (this->_played_cards.count(this->_cards[i]) == 0)
+		if (!this->_played_cards[this->_cards[i]->id])
 		{
 			if (i < 5)
 			{
