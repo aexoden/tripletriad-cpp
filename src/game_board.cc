@@ -200,7 +200,32 @@ void GameBoard::render(SDL_Surface * surface)
 					stringRGBA(surface, col_offset + 5, row_offset + 6, "Fire", 255, 255, 255, 255);
 					break;
 
-				default:
+				case ELEMENT_ICE:
+					stringRGBA(surface, col_offset + 5, row_offset + 6, "Ice", 255, 255, 255, 255);
+					break;
+
+				case ELEMENT_THUNDER:
+					stringRGBA(surface, col_offset + 5, row_offset + 6, "Thunder", 255, 255, 255, 255);
+					break;
+
+				case ELEMENT_POISON:
+					stringRGBA(surface, col_offset + 5, row_offset + 6, "Poison", 255, 255, 255, 255);
+					break;
+
+				case ELEMENT_EARTH:
+					stringRGBA(surface, col_offset + 5, row_offset + 6, "Earth", 255, 255, 255, 255);
+					break;
+
+				case ELEMENT_WIND:
+					stringRGBA(surface, col_offset + 5, row_offset + 6, "Wind", 255, 255, 255, 255);
+					break;
+
+				case ELEMENT_WATER:
+					stringRGBA(surface, col_offset + 5, row_offset + 6, "Water", 255, 255, 255, 255);
+					break;
+
+				case ELEMENT_HOLY:
+					stringRGBA(surface, col_offset + 5, row_offset + 6, "Holy", 255, 255, 255, 255);
 					break;
 			}
 
@@ -229,7 +254,7 @@ void GameBoard::render(SDL_Surface * surface)
 
 			int elemental_adjustment = 0;
 
-			if (this->_squares[row * 3 + col]->element != ELEMENT_NONE && this->_squares_to_cards[this->_squares[row * 3 + col]->id]->element != ELEMENT_NONE)
+			if (this->_squares[row * 3 + col]->element != ELEMENT_NONE)
 				elemental_adjustment += this->_squares[row * 3 + col]->element == this->_squares_to_cards[this->_squares[row * 3 + col]->id]->element ? 1 : -1;
 
 			switch (elemental_adjustment)

@@ -58,7 +58,32 @@ void Card::render(SDL_Surface * surface, int x, int y) const
 			stringRGBA(surface, x + 5, y + 38, "Fire", 255, 255, 255, 255);
 			break;
 
-		default:
+		case ELEMENT_ICE:
+			stringRGBA(surface, x + 5, y + 38, "Ice", 255, 255, 255, 255);
+			break;
+
+		case ELEMENT_THUNDER:
+			stringRGBA(surface, x + 5, y + 38, "Thunder", 255, 255, 255, 255);
+			break;
+
+		case ELEMENT_POISON:
+			stringRGBA(surface, x + 5, y + 38, "Poison", 255, 255, 255, 255);
+			break;
+
+		case ELEMENT_EARTH:
+			stringRGBA(surface, x + 5, y + 38, "Earth", 255, 255, 255, 255);
+			break;
+
+		case ELEMENT_WIND:
+			stringRGBA(surface, x + 5, y + 38, "Wind", 255, 255, 255, 255);
+			break;
+
+		case ELEMENT_WATER:
+			stringRGBA(surface, x + 5, y + 38, "Water", 255, 255, 255, 255);
+			break;
+
+		case ELEMENT_HOLY:
+			stringRGBA(surface, x + 5, y + 38, "Holy", 255, 255, 255, 255);
 			break;
 	}
 }
@@ -84,8 +109,32 @@ std::ostream & operator<<(std::ostream & stream, const Card & card)
 			stream << "Fire";
 			break;
 
-		default:
-			stream << "Unknown";
+		case ELEMENT_ICE:
+			stream << "Ice";
+			break;
+
+		case ELEMENT_THUNDER:
+			stream << "Thunder";
+			break;
+
+		case ELEMENT_POISON:
+			stream << "Poison";
+			break;
+
+		case ELEMENT_EARTH:
+			stream << "Earth";
+			break;
+
+		case ELEMENT_WIND:
+			stream << "Wind";
+			break;
+
+		case ELEMENT_WATER:
+			stream << "Water";
+			break;
+
+		case ELEMENT_HOLY:
+			stream << "Holy";
 			break;
 	}
 
