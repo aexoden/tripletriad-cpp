@@ -88,7 +88,59 @@ void GameBoard::move(const Move * const move)
 	this->_squares_to_cards[move->square->id] = move->card;
 	this->_played_cards[move->card->id] = true;
 	this->_card_history.push(move->card);
-	
+
+	if (this->_same || this->_plus)
+	{
+		bool north = false, south = false, east = false, west = false;
+
+		if (this->_same)
+		{
+			if (this->_check_same(move->square, NORTH) && this->_check_same(move->square, EAST))
+				north = east = true;
+
+			if (this->_check_same(move->square, EAST) && this->_check_same(move->square, SOUTH))
+				east = south = true;
+
+			if (this->_check_same(move->square, SOUTH) && this->_check_same(move->square, WEST))
+				south = west = true;
+
+			if (this->_check_same(move->square, WEST) && this->_check_same(move->square, NORTH))
+				west = north = true;
+		}
+
+		if (this->_plus)
+		{
+			int north_value = this->_check_plus(move->square, NORTH);
+			int south_value = this->_check_plus(move->square, SOUTH);
+			int east_value = this->_check_plus(move->square, EAST);
+			int west_value = this->_check_plus(move->square, WEST);
+
+			if (north_value > 0 && north_value == east_value)
+				north = east = true;
+
+			if (east_value > 0 && east_value == south_value)
+				east = south = true;
+
+			if (south_value > 0 && south_value == west_value)
+				south = west = true;
+
+			if (west_value > 0 && west_value == north_value)
+				west = north = true;
+		}
+
+		if (north)
+			this->_execute_basic(move->square->get_neighbor(NORTH));
+
+		if (south)
+			this->_execute_basic(move->square->get_neighbor(SOUTH));
+
+		if (east)
+			this->_execute_basic(move->square->get_neighbor(EAST));
+
+		if (west)
+			this->_execute_basic(move->square->get_neighbor(WEST));
+	}
+
 	this->_execute_flip(move->square, NORTH);
 	this->_execute_flip(move->square, SOUTH);
 	this->_execute_flip(move->square, EAST);
@@ -254,7 +306,7 @@ void GameBoard::render(SDL_Surface * surface)
 
 			int elemental_adjustment = 0;
 
-			if (this->_squares[row * 3 + col]->element != ELEMENT_NONE)
+			if (this->_squares[row * 3 + col]->element != ELEMENT_NONE && this->_squares_to_cards[this->_squares[row * 3 + col]->id])
 				elemental_adjustment += this->_squares[row * 3 + col]->element == this->_squares_to_cards[this->_squares[row * 3 + col]->id]->element ? 1 : -1;
 
 			switch (elemental_adjustment)
@@ -305,6 +357,22 @@ void GameBoard::render(SDL_Surface * surface)
 	}
 }
 
+void GameBoard::_execute_basic(const Square * square)
+{
+	if (square && this->_owners[this->_squares_to_cards[square->id]->id] != this->_current_piece)
+	{
+		const Card * target_card = this->_squares_to_cards[square->id];
+
+		this->_card_history.push(target_card);
+		this->_owners[target_card->id] = this->_current_piece;
+
+		this->_execute_flip(square, NORTH);
+		this->_execute_flip(square, SOUTH);
+		this->_execute_flip(square, EAST);
+		this->_execute_flip(square, WEST);
+	}
+}
+
 void GameBoard::_execute_flip(const Square * square, Direction direction)
 {
 	const Square * target = square->get_neighbor(direction);
@@ -347,10 +415,10 @@ void GameBoard::_execute_flip(const Square * square, Direction direction)
 
 		if (this->_elemental)
 		{
-			if (square->element != ELEMENT_NONE && card->element != ELEMENT_NONE)
+			if (square->element != ELEMENT_NONE)
 				score += square->element == card->element ? 1 : -1;
 
-			if (target->element != ELEMENT_NONE && target_card->element != ELEMENT_NONE)
+			if (target->element != ELEMENT_NONE)
 				score -= square->element == card->element ? 1 : -1;
 		}
 
@@ -361,4 +429,80 @@ void GameBoard::_execute_flip(const Square * square, Direction direction)
 		}
 
 	}
+}
+
+int GameBoard::_check_plus(const Square * square, Direction direction)
+{
+	const Card * card = this->_squares_to_cards[square->id];
+
+	const Square * target = square->get_neighbor(direction);
+	const Card * target_card = NULL;
+
+	if (target)
+		target_card = this->_squares_to_cards[target->id];
+
+	if (!target_card)
+		return 0;
+
+	switch(direction)
+	{
+		case NORTH:
+			return card->top + target_card->bottom;
+
+		case SOUTH:
+			return card->bottom + target_card->top;
+
+		case EAST:
+			return card->right + target_card->left;
+
+		case WEST:
+			return card->left + target_card->right;
+	}
+}
+
+bool GameBoard::_check_same(const Square * square, Direction direction)
+{
+	const Card * card = this->_squares_to_cards[square->id];
+
+	const Square * target = square->get_neighbor(direction);
+	const Card * target_card = NULL;
+
+	if (target)
+	{
+		target_card = this->_squares_to_cards[target->id];
+
+		if (!target_card)
+			return false;
+	}
+
+	int value;
+	int target_value;
+
+	if (!target_card && !this->_same_wall)
+		return false;
+
+	switch (direction)
+	{
+		case NORTH:
+			value = card->top;
+			target_value = target_card ? target_card->bottom : 10;
+			break;
+
+		case SOUTH:
+			value = card->bottom;
+			target_value = target_card ? target_card->top : 10;
+			break;
+
+		case EAST:
+			value = card->right;
+			target_value = target_card ? target_card->left : 10;
+			break;
+
+		case WEST:
+			value = card->left;
+			target_value = target_card ? target_card->right : 10;
+			break;
+	}
+
+	return value == target_value;
 }
