@@ -39,7 +39,7 @@ class Square;
 class GameBoard
 {
 	public:
-		GameBoard(bool same, bool plus, bool same_wall, bool elemental, Piece first_piece, std::vector<const Card *> cards);
+		GameBoard(bool same, bool plus, bool same_wall, bool elemental, Piece first_piece, std::vector<Element> elements, std::vector<const Card *> cards);
 		GameBoard(const GameBoard & board);
 
 		void move(const Move * move);

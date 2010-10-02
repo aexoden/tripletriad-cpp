@@ -38,13 +38,13 @@ const Square * Square::get_neighbor(Direction direction) const
 	return this->_neighbors[direction];
 }
 
-std::vector<const Square *> Square::build_squares(int rows, int cols)
+std::vector<const Square *> Square::build_squares(int rows, int cols, std::vector<Element> elements)
 {
 	std::vector<Square *> squares(rows * cols);
 
 	for (int row = 0; row < rows; row++)
 		for (int col = 0; col < cols; col++)
-			squares[row * cols + col] = new Square(row, col, ELEMENT_NONE);
+			squares[row * cols + col] = new Square(row, col, elements[row * cols + col]);
 
 	for (int row = 0; row < rows; row++)
 	{

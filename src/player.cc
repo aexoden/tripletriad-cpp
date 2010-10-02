@@ -86,7 +86,7 @@ const Move * Player::get_move()
 int Player::_search_minimax(int max_ply, int alpha, int beta, bool & complete, int & positions)
 {
 	if (positions % 1000 == 0)
-		TripleTriad::get_instance()->checkEvent(false);
+		TripleTriad::get_instance("")->checkEvent(false);
 
 	std::list<const Move *> moves = this->_test_board->get_valid_moves();
 

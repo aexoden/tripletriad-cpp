@@ -20,6 +20,7 @@
  * SOFTWARE.
  */
 
+#include <fstream>
 #include <iostream>
 #include <list>
 #include <vector>
@@ -32,9 +33,55 @@
 
 #include "tripletriad.hh"
 
+static Element parse_element(char ch)
+{
+	Element element;
+
+	switch (ch)
+	{
+		case 'F':
+			element = ELEMENT_FIRE;
+			break;
+
+		case 'I':
+			element = ELEMENT_ICE;
+			break;
+
+		case 'T':
+			element = ELEMENT_THUNDER;
+			break;
+
+		case 'P':
+			element = ELEMENT_POISON;
+			break;
+
+		case 'E':
+			element = ELEMENT_EARTH;
+			break;
+
+		case 'A':
+			element = ELEMENT_WIND;
+			break;
+
+		case 'W':
+			element = ELEMENT_WATER;
+			break;
+
+		case 'H':
+			element = ELEMENT_HOLY;
+			break;
+
+		default:
+			element = ELEMENT_NONE;
+			break;
+	}
+
+	return element;
+}
+
 std::shared_ptr<TripleTriad> TripleTriad::_instance = std::shared_ptr<TripleTriad>();
 
-TripleTriad::TripleTriad() :
+TripleTriad::TripleTriad(const std::string & filename) :
 	cards(10)
 {
 	// Create the graphics surface.
@@ -45,22 +92,59 @@ TripleTriad::TripleTriad() :
 		SDL_Quit();
 	}
 
-	// Configure the cards.
-	cards[0] = new Card(6, 10, 4, 9, ELEMENT_NONE); // 29
-	cards[1] = new Card(4, 2, 10, 10, ELEMENT_NONE); // 27
-	cards[2] = new Card(8, 10, 6, 5, ELEMENT_NONE); // 29
-	cards[3] = new Card(2, 9, 10, 6, ELEMENT_NONE); // 25
-	cards[4] = new Card(9, 10, 2, 6, ELEMENT_NONE); // 25
-	
-	cards[5] = new Card(4, 7, 4, 6, ELEMENT_NONE); // 25
-	cards[6] = new Card(5, 1, 3, 1, ELEMENT_NONE); // 19
-	cards[7] = new Card(2, 1, 5, 3, ELEMENT_NONE); // 11
-	cards[8] = new Card(6, 6, 3, 2, ELEMENT_NONE); // 11
-	cards[9] = new Card(5, 3, 3, 6, ELEMENT_NONE); // 10
-	
-	
-	// Configure the game board and its rules.
-	this->_gameBoard = new GameBoard(false, true, false, false, PIECE_RED, cards);
+
+	std::ifstream file(filename);
+
+	if (!file.is_open())
+		exit(1);
+
+	std::string line;
+
+	std::getline(file, line);
+	Piece first_piece = line[0] == 'B' ? PIECE_BLUE : PIECE_RED;
+
+	std::getline(file, line);
+	bool same = line[0] == '1';
+	bool plus = line[2] == '1';
+	bool same_wall = line[4] == '1';
+	bool elemental = line[6] == '1';
+
+	std::getline(file, line);
+
+	std::vector<Element> elements(9);
+
+	for (int row = 0; row < 3; row++)
+	{
+		std::getline(file, line);
+
+		for (int col = 0; col < 3; col++)
+		{
+			elements[row * 3 + col] = parse_element(line[col * 2]);
+		}
+	}
+
+	std::getline(file, line);
+
+	for (int i = 0; i < 10; i++)
+	{
+		std::getline(file, line);
+
+		int top = line[0] == 'A' ? 10 : line[0] - 48;
+		int bottom = line[2] == 'A' ? 10 : line[2] - 48;
+		int left = line[4] == 'A' ? 10 : line[4] - 48;
+		int right = line[6] == 'A' ? 10 : line[6] - 48;
+
+		Element element = parse_element(line[8]);
+
+		this->cards[i] = new Card(top, bottom, left, right, element);		
+
+		if (i == 4)
+			std::getline(file, line);
+	}
+
+	file.close();
+
+	this->_gameBoard = new GameBoard(same, plus, same_wall, elemental, first_piece, elements, this->cards);
 }
 
 TripleTriad::~TripleTriad()
@@ -68,10 +152,10 @@ TripleTriad::~TripleTriad()
 	delete this->_gameBoard;
 }
 
-std::shared_ptr<TripleTriad> TripleTriad::get_instance()
+std::shared_ptr<TripleTriad> TripleTriad::get_instance(const std::string & filename)
 {
 	if (!TripleTriad::_instance)
-		TripleTriad::_instance = std::shared_ptr<TripleTriad>(new TripleTriad());
+		TripleTriad::_instance = std::shared_ptr<TripleTriad>(new TripleTriad(filename));
 
 	return TripleTriad::_instance;
 }
@@ -116,7 +200,6 @@ void TripleTriad::run()
 	int firstPieces = this->_gameBoard->get_score(PIECE_BLUE);
 	int secondPieces = this->_gameBoard->get_score(PIECE_RED);
 	
-//	this->_gameBoard->printBoard();
 	std::cout << "Final score: Blue: " << firstPieces << "   Red: " << secondPieces << std::endl;
 
 	// Loop until the user exits.
@@ -126,9 +209,6 @@ void TripleTriad::run()
 	{
 		this->checkEvent(true);
 	}
-
-//	delete firstPlayer;
-//	delete secondPlayer;
 }
 
 bool TripleTriad::checkEvent(bool getHumanCard)
@@ -221,7 +301,13 @@ int main(int argc, char* argv[])
 		SDL_Quit();
 	}
 
-	std::shared_ptr<TripleTriad> tripletriad = TripleTriad::get_instance();
+	if (argc < 2)
+	{
+		std::cerr << "Usage: " << argv[0] << " <filename>" << std::endl;
+		exit(1);
+	}
+
+	std::shared_ptr<TripleTriad> tripletriad = TripleTriad::get_instance(std::string(argv[1]));
 	tripletriad->run();
 
 	return 0;

@@ -32,10 +32,9 @@ class GameBoard;
 class TripleTriad
 {
 	public:
-		// Constructor
 		~TripleTriad();
 
-		static std::shared_ptr<TripleTriad> get_instance();
+		static std::shared_ptr<TripleTriad> get_instance(const std::string & filename);
 
 		// Method to run the game.
 		void run();
@@ -44,7 +43,7 @@ class TripleTriad
 		bool checkEvent(bool moveHuman);
 
 	private:
-		TripleTriad();
+		TripleTriad(const std::string & filename);
 
 		static std::shared_ptr<TripleTriad> _instance;
 

@@ -38,7 +38,7 @@ class Square
 
 		const Square * get_neighbor(Direction direction) const;
 
-		static std::vector<const Square *> build_squares(int rows, int cols);
+		static std::vector<const Square *> build_squares(int rows, int cols, std::vector<Element> elements);
 
 		friend std::ostream & operator<<(std::ostream & stream, const Square & square);
 		

@@ -29,7 +29,7 @@
 #include "move.hh"
 #include "square.hh"
 
-GameBoard::GameBoard(bool same, bool plus, bool same_wall, bool elemental, Piece first_piece, std::vector<const Card *> cards) :
+GameBoard::GameBoard(bool same, bool plus, bool same_wall, bool elemental, Piece first_piece, std::vector<Element> elements, std::vector<const Card *> cards) :
 	_current_piece(first_piece),
 	_same(same),
 	_plus(plus),
@@ -43,7 +43,7 @@ GameBoard::GameBoard(bool same, bool plus, bool same_wall, bool elemental, Piece
 	_move_history(),
 	_card_history()
 {
-	this->_squares = Square::build_squares(3, 3);
+	this->_squares = Square::build_squares(3, 3, elements);
 
 	for (size_t i = 0; i < cards.size(); i++)
 	{
