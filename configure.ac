@@ -6,7 +6,7 @@ AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([1.11 foreign subdir-objects])
 AM_SILENT_RULES([yes])
 AC_CONFIG_SRCDIR([src/tripletriad.cc])
-AM_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_PROG_CXX
@@ -28,6 +28,5 @@ AC_CHECK_LIB([SDL_gfx], [pixelRGBA], LIBS="$LIBS -lSDL_gfx", AC_MSG_ERROR([*** S
 AC_SUBST(CXXFLAGS)
 AC_SUBST(LIBS)
 
-AC_CONFIG_FILES([Makefile
-		 src/Makefile])
+AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
