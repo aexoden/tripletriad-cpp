@@ -57,8 +57,8 @@ class GameBoard
 
 		void render(SDL_Surface * surface);
 	private:
-		void _execute_basic(const Square * square);
-		void _execute_flip(const Square * square, Direction direction);
+		void _execute_basic(const Square * square, bool check);
+		bool _execute_flip(const Square * square, Direction direction);
 		int _check_plus(const Square * square, Direction direction);
 		bool _check_same(const Square * square, Direction direction);
 

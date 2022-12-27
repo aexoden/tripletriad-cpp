@@ -92,20 +92,35 @@ void GameBoard::move(const Move * const move)
 	if (this->_same || this->_plus)
 	{
 		bool north = false, south = false, east = false, west = false;
+		bool combo = false;
 
 		if (this->_same)
 		{
-			if (this->_check_same(move->square, NORTH) && this->_check_same(move->square, EAST))
+			bool north_same = this->_check_same(move->square, NORTH);
+			bool south_same = this->_check_same(move->square, SOUTH);
+			bool west_same = this->_check_same(move->square, WEST);
+			bool east_same = this->_check_same(move->square, EAST);
+
+			if (north_same && east_same)
 				north = east = true;
 
-			if (this->_check_same(move->square, EAST) && this->_check_same(move->square, SOUTH))
+			if (north_same && south_same)
+				north = south = true;
+
+			if (north_same && west_same)
+				north = west = true;
+
+			if (east_same && west_same)
+				east = west = true;
+
+			if (east_same && south_same)
 				east = south = true;
 
-			if (this->_check_same(move->square, SOUTH) && this->_check_same(move->square, WEST))
-				south = west = true;
+			if (west_same && south_same)
+				west = south = true;
 
-			if (this->_check_same(move->square, WEST) && this->_check_same(move->square, NORTH))
-				west = north = true;
+			if (north || south || east || west)
+				combo = true;
 		}
 
 		if (this->_plus)
@@ -126,25 +141,46 @@ void GameBoard::move(const Move * const move)
 
 			if (west_value > 0 && west_value == north_value)
 				west = north = true;
+
+			if (north_value > 0 && north_value == south_value)
+				north = south = true;
+
+			if (east_value > 0 && east_value == west_value)
+				east = west = true;
+
+			if (north || south || east || west)
+				combo = true;
 		}
 
-		if (north)
-			this->_execute_basic(move->square->get_neighbor(NORTH));
-
-		if (south)
-			this->_execute_basic(move->square->get_neighbor(SOUTH));
-
-		if (east)
-			this->_execute_basic(move->square->get_neighbor(EAST));
-
-		if (west)
-			this->_execute_basic(move->square->get_neighbor(WEST));
+		if (north) {
+			this->_execute_basic(move->square->get_neighbor(NORTH), true);
+		} else if (this->_execute_flip(move->square, NORTH) && combo) {
+			this->_execute_basic(move->square->get_neighbor(NORTH), false);
+		}
+		
+		if (south) {
+			this->_execute_basic(move->square->get_neighbor(SOUTH), true);
+		} else if (this->_execute_flip(move->square, SOUTH) && combo) {
+			this->_execute_basic(move->square->get_neighbor(SOUTH), false);
+		}
+		
+		if (east) {
+			this->_execute_basic(move->square->get_neighbor(EAST), true);
+		} else if (this->_execute_flip(move->square, EAST) && combo) {
+			this->_execute_basic(move->square->get_neighbor(EAST), false);
+		}
+		
+		if (west) {
+			this->_execute_basic(move->square->get_neighbor(WEST), true);
+		} else if (this->_execute_flip(move->square, WEST) && combo) {
+			this->_execute_basic(move->square->get_neighbor(WEST), false);
+		}		
+	} else {
+		this->_execute_flip(move->square, NORTH);
+		this->_execute_flip(move->square, SOUTH);
+		this->_execute_flip(move->square, EAST);
+		this->_execute_flip(move->square, WEST);
 	}
-
-	this->_execute_flip(move->square, NORTH);
-	this->_execute_flip(move->square, SOUTH);
-	this->_execute_flip(move->square, EAST);
-	this->_execute_flip(move->square, WEST);
 
 	this->_move_history.push(move);
 
@@ -243,6 +279,8 @@ void GameBoard::render(SDL_Surface * surface)
 			else
 				boxRGBA(surface, col_offset, row_offset, col_offset + 99, row_offset + 99, 64, 32, 0, 255);
 
+			if (this->_elemental)
+			{
 			switch (this->_squares[row * 3 + col]->element)
 			{
 				case ELEMENT_NONE:
@@ -280,6 +318,7 @@ void GameBoard::render(SDL_Surface * surface)
 					stringRGBA(surface, col_offset + 5, row_offset + 6, "Holy", 255, 255, 255, 255);
 					break;
 			}
+			}
 
 			const Card * card = this->_squares_to_cards[this->_squares[row * 3 + col]->id];
 
@@ -309,15 +348,18 @@ void GameBoard::render(SDL_Surface * surface)
 			if (this->_squares[row * 3 + col]->element != ELEMENT_NONE && this->_squares_to_cards[this->_squares[row * 3 + col]->id])
 				elemental_adjustment += this->_squares[row * 3 + col]->element == this->_squares_to_cards[this->_squares[row * 3 + col]->id]->element ? 1 : -1;
 
-			switch (elemental_adjustment)
+			if (this->_elemental)
 			{
-				case 1:
-					stringRGBA(surface, col_offset + 40, row_offset + 75, "+1", 255, 255, 255, 255);
-					break;
+				switch (elemental_adjustment)
+				{
+					case 1:
+						stringRGBA(surface, col_offset + 40, row_offset + 75, "+1", 255, 255, 255, 255);
+						break;
 
-				case -1:
-					stringRGBA(surface, col_offset + 40, row_offset + 75, "-1", 255, 255, 255, 255);
-					break;
+					case -1:
+						stringRGBA(surface, col_offset + 40, row_offset + 75, "-1", 255, 255, 255, 255);
+						break;
+				}
 			}
 		}
 	}
@@ -357,34 +399,45 @@ void GameBoard::render(SDL_Surface * surface)
 	}
 }
 
-void GameBoard::_execute_basic(const Square * square)
+void GameBoard::_execute_basic(const Square * square, bool check)
 {
-	if (square && this->_owners[this->_squares_to_cards[square->id]->id] != this->_current_piece)
+//	if (square && (!check || this->_owners[this->_squares_to_cards[square->id]->id] != this->_current_piece))
+	if (square && (!check || this->_owners[this->_squares_to_cards[square->id]->id] != this->_current_piece))
 	{
 		const Card * target_card = this->_squares_to_cards[square->id];
 
-		this->_card_history.push(target_card);
-		this->_owners[target_card->id] = this->_current_piece;
+		if (this->_owners[target_card->id] != this->_current_piece)
+		{
+			this->_card_history.push(target_card);
+			this->_owners[target_card->id] = this->_current_piece;
+		}
 
-		this->_execute_flip(square, NORTH);
-		this->_execute_flip(square, SOUTH);
-		this->_execute_flip(square, EAST);
-		this->_execute_flip(square, WEST);
+		if (this->_execute_flip(square, NORTH))
+			this->_execute_basic(square->get_neighbor(NORTH), false);
+
+		if (this->_execute_flip(square, SOUTH))
+			this->_execute_basic(square->get_neighbor(SOUTH), false);
+
+		if (this->_execute_flip(square, EAST))
+			this->_execute_basic(square->get_neighbor(EAST), false);
+
+		if (this->_execute_flip(square, WEST))
+			this->_execute_basic(square->get_neighbor(WEST), false);
 	}
 }
 
-void GameBoard::_execute_flip(const Square * square, Direction direction)
+bool GameBoard::_execute_flip(const Square * square, Direction direction)
 {
 	const Square * target = square->get_neighbor(direction);
 
 	if (!target)
-		return;
+		return false;
 
 	const Card * card = this->_squares_to_cards[square->id];
 	const Card * target_card = this->_squares_to_cards[target->id];
 
 	if (!target_card)
-		return;
+		return false;
 
 	if (this->_owners[target_card->id] != this->_current_piece)
 	{
@@ -419,16 +472,19 @@ void GameBoard::_execute_flip(const Square * square, Direction direction)
 				score += square->element == card->element ? 1 : -1;
 
 			if (target->element != ELEMENT_NONE)
-				score -= square->element == card->element ? 1 : -1;
+				score -= target->element == target_card->element ? 1 : -1;
 		}
 
 		if (score > 0)
 		{
 			this->_card_history.push(target_card);
 			this->_owners[target_card->id] = this->_current_piece;
+			return true;
 		}
 
 	}
+
+	return false;
 }
 
 int GameBoard::_check_plus(const Square * square, Direction direction)
@@ -458,6 +514,8 @@ int GameBoard::_check_plus(const Square * square, Direction direction)
 		case WEST:
 			return card->left + target_card->right;
 	}
+
+	return 0;
 }
 
 bool GameBoard::_check_same(const Square * square, Direction direction)
